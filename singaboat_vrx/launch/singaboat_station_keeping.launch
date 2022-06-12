@@ -2,19 +2,26 @@
 
 <launch>
   
-  <!-- SingaBoat-VRX Station-Keeping Gazebo World -->
+  <!-- SINGABOAT-VRX Station-Keeping Gazebo Simulation -->
   <include file="$(find vrx_gazebo)/launch/station_keeping.launch">
   
-    <!-- SingaBoat-VRX Station-Keeping Gazebo World -->
+    <!-- SINGABOAT-VRX Station-Keeping Gazebo World -->
     <arg name="world" value="$(find vrx_gazebo)/worlds/stationkeeping_task.world"/>
     <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/stationkeeping0.world"/-->
     <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/stationkeeping1.world"/-->
     <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/stationkeeping2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping3.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping4.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping5.world"/-->
+    
  
-    <!-- SingaBoat-VRX WAM-V URDF -->
+    <!-- SINGABOAT-VRX WAM-V URDF -->
     <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
     
-    <!-- SingaBoat-VRX WAM-V Default Pose -->
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
     <arg name="x" default="-532"/>
     <arg name="y" default="162"/>
     <arg name="z" default="0.1"/>
@@ -24,16 +31,16 @@
     
   </include>
 
-  <!-- SingaBoat-VRX Pose Processor -->
+  <!-- SINGABOAT-VRX Pose Processor -->
   <node pkg="singaboat_vrx" type="singaboat_pose_processor.py" name="singaboat_pose_processor"/>
   
-  <!-- SingaBoat-VRX Station Keeping -->
+  <!-- SINGABOAT-VRX Station-Keeping -->
   <node pkg="singaboat_vrx" type="singaboat_station_keeping.py" name="singaboat_station_keeping" output="screen"/>
 
-  <!-- SingaBoat-VRX IK Solver -->
+  <!-- SINGABOAT-VRX IK Solver -->
   <node pkg="singaboat_vrx" type="singaboat_ik_solver.py" name="singaboat_ik_solver"/>
 
-  <!-- SingaBoat-VRX RQT Reconfigure -->
+  <!-- SINGABOAT-VRX RQT Reconfigure -->
   <!--node pkg="rqt_reconfigure" type="rqt_reconfigure" name="station_keeping_config"/-->
 
 </launch>

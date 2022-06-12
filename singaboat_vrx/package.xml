@@ -2,7 +2,7 @@
 <package format="2">
 
   <name>singaboat_vrx</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>ROS Package of Team SINGABOAT-VRX for Participation in Virtual RobotX (VRX) Competition 2022</description>
 
   <maintainer email="samaktanmay@gmail.com">Tanmay Vilas Samak</maintainer>
@@ -10,14 +10,13 @@
 
   <license>BSD</license>
 
-  <url type="repository">https://github.com/Tinker-Twins/SingaBoat-VRX</url>
+  <url type="repository">https://github.com/Tinker-Twins/SINGABOAT-VRX</url>
 
   <author email="samaktanmay@gmail.com">Tanmay Vilas Samak</author>
   <author email="samakchinmayvilas@gmail.com">Chinmay Vilas Samak</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
@@ -29,8 +28,8 @@
   <build_depend>xacro</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
 
-  <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
@@ -43,5 +42,6 @@
   <exec_depend>xacro</exec_depend>
   <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
 
 </package>

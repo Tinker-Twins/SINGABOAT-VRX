@@ -8,7 +8,6 @@ project(singaboat_vrx)
 # Catkin package requirements
 find_package(catkin REQUIRED COMPONENTS
   vrx_gazebo
-  roscpp
   rospy
   std_msgs
   geometry_msgs
@@ -19,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   xacro
   dynamic_reconfigure
   message_generation
+  actionlib_msgs
 )
 
 ########################################
@@ -34,28 +34,35 @@ catkin_python_setup()
 
 # Dynamic reconfigure options
 generate_dynamic_reconfigure_options(
+  cfg/teleoperation_config.cfg
+  cfg/pose_processor_config.cfg
   cfg/ik_solver_config.cfg
+  cfg/task_manager_config.cfg
+  cfg/mission_manager_config.cfg
   cfg/station_keeping_config.cfg
   cfg/wayfinding_config.cfg
+  cfg/scene_perception_config.cfg
+  cfg/semantic_navigation_config.cfg
+  cfg/gymkhana_challenge_config.cfg
+  cfg/scan_dock_deliver_config.cfg
 )
 
-################################
-## Custom message definitions ##
-################################
+#################################
+## Custom action specification ##
+#################################
 
-# Declare custom ROS messages
-add_message_files(
-  FILES
-  Pose3D.msg
-  Pose3DStamped.msg
-  Pose6D.msg
-  Pose6DStamped.msg
+# Declare custom ROS actions
+ add_action_files(
+   FILES
+   Mission.action
 )
 
-# Generate declared messages
+# Generate action messages
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geographic_msgs
+  actionlib_msgs
 )
 
 #################################
@@ -65,7 +72,6 @@ generate_messages(
 # Catkin runtime dependencies
 catkin_package(CATKIN_DEPENDS
   vrx_gazebo
-  roscpp
   rospy
   std_msgs
   geometry_msgs
@@ -76,6 +82,7 @@ catkin_package(CATKIN_DEPENDS
   xacro
   dynamic_reconfigure
   message_runtime
+  actionlib_msgs
 )
 
 #############
@@ -84,12 +91,17 @@ catkin_package(CATKIN_DEPENDS
 
 # Install all the script files
 catkin_install_python(PROGRAMS
-  scripts/singaboat_teleop_key.py
-  scripts/singaboat_pose_processor.py
-  scripts/singaboat_ik_solver.py
-  scripts/singaboat_task_manager.py
-  scripts/singaboat_station_keeping.py
-  scripts/singaboat_wayfinding.py
+  src/singaboat_teleoperation.py
+  src/singaboat_pose_processor.py
+  src/singaboat_ik_solver.py
+  src/singaboat_mission_manager.py
+  src/singaboat_task_manager.py
+  src/singaboat_station_keeping.py
+  src/singaboat_wayfinding.py
+  src/singaboat_scene_perception.py
+  src/singaboat_semantic_navigation.py
+  src/singaboat_gymkhana_challenge.py
+  src/singaboat_scan_dock_deliver.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # Install all the cfg files

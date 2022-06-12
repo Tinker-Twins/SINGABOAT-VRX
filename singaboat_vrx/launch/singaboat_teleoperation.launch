@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Teleoperation -->
+  <node pkg="singaboat_vrx" type="singaboat_teleoperation.py" name="singaboat_teleoperation" output="screen"/>
+
+</launch>

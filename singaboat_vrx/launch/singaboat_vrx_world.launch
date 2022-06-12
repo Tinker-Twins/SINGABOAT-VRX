@@ -2,13 +2,18 @@
 
 <launch>
 
-  <!-- SingaBoat-VRX Gazebo World -->
+  <!-- SINGABOAT-VRX Gazebo Simulation -->
   <include file="$(find vrx_gazebo)/launch/vrx.launch">
+    
+    <!-- SINGABOAT-VRX Gazebo World -->
+    <!--arg name="world" value="$(find singaboat_vrx)/worlds/open_ocean.world"/-->
+    <!--arg name="world" value="$(find singaboat_vrx)/worlds/sydney_regatta.world"/-->
+    <arg name="world" value="$(find singaboat_vrx)/worlds/vrx_course.world"/>
   
-    <!-- SingaBoat-VRX WAM-V URDF -->
+    <!-- SINGABOAT-VRX WAM-V URDF -->
     <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
     
-    <!-- SingaBoat-VRX WAM-V Default Pose -->
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
     <arg name="x" default="-532"/>
     <arg name="y" default="162"/>
     <arg name="z" default="0.1"/>

@@ -1,0 +1,8 @@
+# Define the goal message, sent by action client
+geographic_msgs/GeoPoseStamped[] mission
+---
+# Define the result message, sent by action server unpon goal completion
+bool mission_complete
+---
+# Define a feedback message, sent periodically by action server
+float32 mission_progress

@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<launch>
-
-  <!-- SingaBoat-VRX Keydrive -->
-  <node pkg="singaboat_vrx" type="singaboat_teleop_key.py" name="singaboat_teleop_key" output="screen"/>
-
-</launch>

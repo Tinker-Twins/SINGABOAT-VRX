@@ -2,13 +2,13 @@
 
 <launch>
 
-  <!-- SingaBoat-VRX Pose Processor -->
+  <!-- SINGABOAT-VRX Pose Processor -->
   <node pkg="singaboat_vrx" type="singaboat_pose_processor.py" name="singaboat_pose_processor"/>
   
-  <!-- SingaBoat-VRX Wayfinding -->
+  <!-- SINGABOAT-VRX Wayfinding -->
   <node pkg="singaboat_vrx" type="singaboat_wayfinding.py" name="singaboat_wayfinding" output="screen"/>
 
-  <!-- SingaBoat-VRX IK Solver -->
+  <!-- SINGABOAT-VRX IK Solver -->
   <node pkg="singaboat_vrx" type="singaboat_ik_solver.py" name="singaboat_ik_solver"/>
 
 </launch>

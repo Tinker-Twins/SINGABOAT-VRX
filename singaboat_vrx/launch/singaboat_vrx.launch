@@ -2,7 +2,7 @@
 
 <launch>
 
-  <!-- SingaBoat-VRX Task Manager -->
+  <!-- SINGABOAT-VRX Task Manager -->
   <node pkg="singaboat_vrx" type="singaboat_task_manager.py" name="singaboat_task_manager" output="screen"/>
 
 </launch>
