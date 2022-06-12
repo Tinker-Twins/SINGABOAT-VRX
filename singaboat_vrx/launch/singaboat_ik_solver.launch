@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SingaBoat-VRX IK Solver -->
+  <node pkg="singaboat_vrx" type="singaboat_ik_solver.py" name="singaboat_ik_solver" output="screen"/>
+
+  <!-- SingaBoat-VRX RQT Publisher -->
+  <node pkg="rqt_publisher" type="rqt_publisher" name="singaboat_cmd_vel_pub"/>
+
+  <!-- SingaBoat-VRX RQT Reconfigure -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="ik_solver_config"/>
+
+</launch>

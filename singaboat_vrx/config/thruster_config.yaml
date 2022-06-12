@@ -1,0 +1,13 @@
+engine:
+  - prefix: "front_left_thruster"
+    position: "1.75 0.55 0.3"
+    orientation: "0.0 0.0 -2.3562"
+  - prefix: "front_right_thruster"
+    position: "1.75 -0.55 0.3"
+    orientation: "0.0 0.0 2.3562"
+  - prefix: "rear_left_thruster"
+    position: "-1.75 0.55 0.3"
+    orientation: "0.0 0.0 -0.7854"
+  - prefix: "rear_right_thruster"
+    position: "-1.75 -0.55 0.3"
+    orientation: "0.0 0.0 0.7854"

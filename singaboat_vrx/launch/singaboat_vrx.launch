@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SingaBoat-VRX Task Manager -->
+  <node pkg="singaboat_vrx" type="singaboat_task_manager.py" name="singaboat_task_manager" output="screen"/>
+
+</launch>
