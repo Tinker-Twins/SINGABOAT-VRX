@@ -30,7 +30,7 @@ $ docker ps -a
 3. Commit changes to Docker Hub:
 ```bash
 $ docker commit -m "<COMMIT MESSAGE>" -a "<FULL NAME>" <CONTAINER ID> <USERNAME>/<IMAGE_REPOSITORY_NAME>:<TAG>
-$ docker commit -m "SINGABOAT-VRX" -a "Tinker Twins" 35b286bf2b9b tinkertwins/singaboat-vrx:v2022.2
+$ docker commit -m "SINGABOAT-VRX" -a "Tinker Twins" 35b286bf2b9b tinkertwins/singaboat-vrx:v2022.3
 ```
 
 4. Login to Docker Hub:
