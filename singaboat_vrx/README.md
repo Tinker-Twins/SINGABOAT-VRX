@@ -1,6 +1,6 @@
 # ROS Package of Team SINGABOAT-VRX for VRX Competition
 
-<img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/media/PNG/Team.png" width="1080">
+<img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Team.png" width="1080">
 
 **COMPETITION:** Virtual RobotX (VRX) Competition 2022
 
