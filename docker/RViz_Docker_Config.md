@@ -3,7 +3,7 @@
 $ cd /home/$USER/VRX_Workspace/src/SINGABOAT-VRX/singaboat_vrx/rviz
 ```
 
-2. 2. Edit `*.rviz` file to contain RViz window configuration:
+2. Edit `*.rviz` file to contain RViz window configuration:
 ```bash
 $ nano singaboat_<TASK_NAME>.rviz
 ```
