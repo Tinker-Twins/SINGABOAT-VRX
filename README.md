@@ -1,6 +1,6 @@
 # SINGABOAT-VRX | Virtual RobotX (VRX) Competition
 
-<img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/media/PNG/Team.png" width="1080">
+<img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Team.png" width="1080">
 
 **COMPETITION:** Virtual RobotX (VRX) Competition 2022
 
@@ -80,14 +80,14 @@ Demonstration videos are available on [YouTube](https://youtube.com/playlist?lis
 
 ## VRX COMPETITION 2022
 
-[Our team worked meticulously](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/PNG/Team%20Working%20on%20Tasks.png) to complete all the [6 tasks of VRX Competition 2022](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/PNG/Tasks.png) and ultimately emerged as one of the winners of the challange.
+[Our team worked meticulously](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Team%20Working%20on%20Tasks.png) to complete all the [6 tasks of VRX Competition 2022](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Tasks.png) and ultimately emerged as one of the winners of the challange.
 
-| ![Station-Keeping](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/GIF/Task%201%20-%20Station-Keeping.gif) | ![Wayfinding](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/GIF/Task%202%20-%20Wayfinding.gif) | ![Scene Perception](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/GIF/Task%203%20-%20Scene%20Perception.gif) |
+| ![Station-Keeping](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%201%20-%20Station-Keeping.gif) | ![Wayfinding](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%202%20-%20Wayfinding.gif) | ![Scene Perception](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%203%20-%20Scene%20Perception.gif) |
 |:-----------------------------------------------:|:-------------------------------------------------:|:-----------------------------------------------:|
 | [Station-Keeping Task](https://github.com/osrf/vrx/wiki/vrx_2022-station_keeping_task) | [Wayfinding Task](https://github.com/osrf/vrx/wiki/vrx_2022-wayfinding_task) | [Scene Perception Task](https://github.com/osrf/vrx/wiki/vrx_2022-perception_task) |
-| ![Semantic Navigation](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/GIF/Task%204%20-%20Semantic%20Navigation.gif) | ![Gymkhana Challenge](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/GIF/Task%205%20-%20Gymkhana%20Challenge.gif) | ![Scan-Dock-Deliver](https://github.com/Tinker-Twins/SINGABOAT-VRX/media/GIF/Task%206%20-%20Scan-Dock-Deliver.gif) |
+| ![Semantic Navigation](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%204%20-%20Semantic%20Navigation.gif) | ![Gymkhana Challenge](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%205%20-%20Gymkhana%20Challenge.gif) | ![Scan-Dock-Deliver](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%206%20-%20Scan-Dock-Deliver.gif) |
 | [Semantic Navigation Task](https://github.com/osrf/vrx/wiki/vrx_2022-wildlife_task) | [Gymkhana Challenge Task](https://github.com/osrf/vrx/wiki/vrx_2022-gymkhana_task) | [Scan-Dock-Deliver Task](https://github.com/osrf/vrx/wiki/vrx_2022-scan_dock_deliver_task) |
 
 The detailed scores and ranks of all the teams that qualified for finals of VRX Competition 2022 are available on [VRX GitHub Wiki](https://github.com/osrf/vrx/wiki/vrx_2022-phase3_results), and a summary of results and awards declared during the [VRX 2022 Award Ceremony](https://youtu.be/aVPmrvTCjpg) are available on [VRX Website](https://robotx.org/2022/05/04/vrx-2022-awards-and-final-standings/).
 
-<img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/media/PNG/Awards.png" width="1080">
+<img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Awards.png" width="1080">
