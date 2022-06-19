@@ -1,3 +1,5 @@
+# Configure RViz Window Inside Docker Container
+
 1. Change directory to `singaboat_vrx/rviz`:
 ```bash
 $ cd /home/$USER/VRX_Workspace/src/SINGABOAT-VRX/singaboat_vrx/rviz
