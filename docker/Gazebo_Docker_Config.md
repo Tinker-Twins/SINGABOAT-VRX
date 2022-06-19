@@ -1,3 +1,5 @@
+# Configure Gazebo Simulator Window Inside Docker Container
+
 1. Change directory to `.gazebo`:
 ```bash
 $ cd
