@@ -16,6 +16,7 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
         ros-noetic-key-teleop \
         ros-noetic-robot-localization \
         ros-noetic-robot-state-publisher \
+        ros-noetic-joint-state-publisher \
         ros-noetic-rviz \
         ros-noetic-teleop-tools \
         ros-noetic-teleop-twist-keyboard \
