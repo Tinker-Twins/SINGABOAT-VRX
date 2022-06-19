@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX Semantic Navigation -->
+  <node pkg="singaboat_vrx" type="singaboat_semantic_navigation.py" name="singaboat_semantic_navigation" output="screen"/>
+ 
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+
+</launch>

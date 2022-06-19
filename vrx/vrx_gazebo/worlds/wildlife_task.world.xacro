@@ -19,7 +19,6 @@
       </wind_objs>
     </xacro:usv_wind_gazebo>
 
-
     <!-- The VRX animal buoys -->
     <include>
       <name>crocodile_buoy</name>

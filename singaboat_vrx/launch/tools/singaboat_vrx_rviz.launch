@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX Joint State Publisher -->
+  <node ns="wamv" pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+    <param name="gui" value="false"/>
+  </node>
+  
+  <!-- SINGABOAT-VRX Robot State Publisher -->
+  <node ns="wamv" pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <!-- SINGABOAT-VRX RViz -->
+  <arg name="rviz_config" default="$(find singaboat_vrx)/rviz/singaboat_vrx.rviz"/>
+  <node pkg="rviz" type="rviz" name="singaboat_viz" args="-d $(arg rviz_config)"/>
+
+</launch>

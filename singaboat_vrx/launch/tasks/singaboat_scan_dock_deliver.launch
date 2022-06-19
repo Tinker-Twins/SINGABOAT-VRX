@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX GUI/Headless Mode -->
+  <arg name="headless" default="false"/>
+  
+  <!-- SINGABOAT-VRX Scan-Dock-Deliver Simulation -->
+  <include file="$(find vrx_gazebo)/launch/scan_dock_deliver.launch">
+  
+    <!-- SINGABOAT-VRX Scan-Dock-Deliver Gazebo World -->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/scan_dock_deliver.world"/-->
+    <arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/scan_dock_deliver0.world"/>
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/scan_dock_deliver1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/scan_dock_deliver2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/scan_dock_deliver0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/scan_dock_deliver1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/scan_dock_deliver2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/scan_dock_deliver3.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/scan_dock_deliver4.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/scan_dock_deliver5.world"/-->
+ 
+    <!-- SINGABOAT-VRX WAM-V URDF -->
+    <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+    
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
+    <arg name="x" default="-532"/>
+    <arg name="y" default="162"/>
+    <arg name="z" default="0.1"/>
+    <arg name="P" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="Y" default="1"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation With GUI -->
+    <arg name="gui" value="false" if="$(arg headless)"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation Paused -->
+    <arg name="paused" value="true" unless="$(arg headless)"/>
+    
+  </include>
+  
+  <!-- SINGABOAT-VRX Mission Manager -->
+  <node pkg="singaboat_vrx" name="singaboat_mission_manager" type="singaboat_mission_manager.py" output="screen"/>
+
+  <!-- SINGABOAT-VRX Scan-Dock-Deliver -->
+  <node pkg="singaboat_vrx" type="singaboat_scan_dock_deliver.py" name="singaboat_scan_dock_deliver" output="screen"/>
+    
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+
+  <!-- SINGABOAT-VRX RQT Reconfigure -->
+  <!--node pkg="rqt_reconfigure" type="rqt_reconfigure" name="scan_dock_deliver_config"/-->
+  
+  <group unless="$(arg headless)">
+    <!-- SINGABOAT-VRX Joint State Publisher -->
+    <node ns="wamv" pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+      <param name="gui" value="false"/>
+    </node>
+    <!-- SINGABOAT-VRX Robot State Publisher -->
+    <node ns="wamv" pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+    <!-- SINGABOAT-VRX RViz -->
+    <arg name="rviz_config" default="$(find singaboat_vrx)/rviz/singaboat_scan_dock_deliver.rviz"/>
+    <node pkg="rviz" type="rviz" name="scan_dock_deliver_viz" args="-d $(arg rviz_config)"/>
+  </group>
+
+</launch>

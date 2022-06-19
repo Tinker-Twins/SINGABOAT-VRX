@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Wayfinding Gazebo Simulation -->
+  <include file="$(find vrx_gazebo)/launch/wayfinding.launch">
+  
+    <!-- SINGABOAT-VRX Wayfinding Gazebo World -->
+    <arg name="world" value="$(find vrx_gazebo)/worlds/wayfinding_task.world"/>
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/wayfinding0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/wayfinding1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/wayfinding2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/wayfinding0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/wayfinding1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/wayfinding2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/wayfinding3.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/wayfinding4.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/wayfinding5.world"/-->
+ 
+    <!-- SINGABOAT-VRX WAM-V URDF -->
+    <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+    
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
+    <arg name="x" default="-532"/>
+    <arg name="y" default="162"/>
+    <arg name="z" default="0.1"/>
+    <arg name="P" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="Y" default="1"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation Paused -->
+    <arg name="paused" value="true"/>
+    
+  </include>
+  
+  <!-- SINGABOAT-VRX Wayfinding -->
+  <node pkg="singaboat_vrx" type="singaboat_wayfinding.py" name="singaboat_wayfinding" output="screen"/>
+
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+  
+  <!-- SINGABOAT-VRX Bag Export Directory -->
+  <arg name="rosbag_dir" default="$(find singaboat_vrx)/bags"/>
+  
+  <!-- SINGABOAT-VRX Record Bag Files -->
+  <node pkg="rosbag" type="record" name="singaboat_data_recorder" args="-O $(arg rosbag_dir)/singaboat_wayfinding.bag -x '(.*)/compressed(.*)'"/>
+
+</launch>

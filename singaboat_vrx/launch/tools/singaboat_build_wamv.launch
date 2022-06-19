@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Configuration -->
+  <param name="component_yaml" value="$(find singaboat_vrx)/wamv/component_config.yaml"/>
+  <param name="thruster_yaml" value="$(find singaboat_vrx)/wamv/thruster_config.yaml"/>
+  <param name="wamv_locked" value="false"/>
+
+  <!-- SINGABOAT-VRX Built URDF Path -->
+  <param name="wamv_target" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+
+  <!-- SINGABOAT-VRX Source URDF Paths -->
+  <param name="wamv_gazebo" value="$(find wamv_gazebo)/urdf/wamv_gazebo.urdf.xacro"/>
+  <param name="components_dir" value="$(find wamv_gazebo)/urdf/components"/>  
+  <param name="thrusters_dir" value="$(find wamv_description)/urdf/thrusters"/>
+
+  <!-- SINGABOAT-VRX Build Target Config -->
+  <node name="wamv_generator" pkg="vrx_gazebo" type="generate_wamv.py" output="screen" required="true"/>
+
+</launch>

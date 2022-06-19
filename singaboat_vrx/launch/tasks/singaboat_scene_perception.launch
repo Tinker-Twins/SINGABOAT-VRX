@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX GUI/Headless Mode -->
+  <arg name="headless" default="false"/>
+  
+  <!-- SINGABOAT-VRX Scene Perception Gazebo Simulation -->
+  <include file="$(find vrx_gazebo)/launch/perception_task.launch">
+  
+    <!-- SINGABOAT-VRX Scene Perception Gazebo World -->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/perception_task.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/perception0.world"/-->
+    <arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/perception1.world"/>
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/perception2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/perception0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/perception1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/perception2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/perception3.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/perception4.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/perception5.world"/-->
+ 
+    <!-- SINGABOAT-VRX WAM-V URDF -->
+    <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+    
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
+    <arg name="x" default="-532"/>
+    <arg name="y" default="162"/>
+    <arg name="z" default="0.1"/>
+    <arg name="P" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="Y" default="1"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation With GUI -->
+    <arg name="gui" value="false" if="$(arg headless)"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation Paused -->
+    <arg name="paused" value="true" unless="$(arg headless)"/>
+    
+  </include>
+
+  <!-- SINGABOAT-VRX Scene Perception -->
+  <node pkg="singaboat_vrx" type="singaboat_scene_perception.py" name="singaboat_scene_perception" output="screen"/>
+
+  <!-- SINGABOAT-VRX RQT Reconfigure -->
+  <!--node pkg="rqt_reconfigure" type="rqt_reconfigure" name="scene_perception_config"/-->
+  
+  <group unless="$(arg headless)">
+    <!-- SINGABOAT-VRX Joint State Publisher -->
+    <node ns="wamv" pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+      <param name="gui" value="false"/>
+    </node>
+    <!-- SINGABOAT-VRX Robot State Publisher -->
+    <node ns="wamv" pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+    <!-- SINGABOAT-VRX RViz -->
+    <arg name="rviz_config" default="$(find singaboat_vrx)/rviz/singaboat_scene_perception.rviz"/>
+    <node pkg="rviz" type="rviz" name="scene_perception_viz" args="-d $(arg rviz_config)"/>
+  </group>
+  
+</launch>

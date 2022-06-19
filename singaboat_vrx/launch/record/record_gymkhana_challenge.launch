@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX Gymkhana Challenge Simulation -->
+  <include file="$(find vrx_gazebo)/launch/gymkhana.launch">
+  
+    <!-- SINGABOAT-VRX Gymkhana Challenge Gazebo World -->
+    <arg name="world" value="$(find vrx_gazebo)/worlds/gymkhana.world"/>
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/gymkhana0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/gymkhana1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/gymkhana2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/gymkhana0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/gymkhana1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/gymkhana2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/gymkhana3.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/gymkhana4.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/gymkhana5.world"/-->
+ 
+    <!-- SINGABOAT-VRX WAM-V URDF -->
+    <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+    
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
+    <arg name="x" default="-532"/>
+    <arg name="y" default="162"/>
+    <arg name="z" default="0.1"/>
+    <arg name="P" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="Y" default="1"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation Paused -->
+    <arg name="paused" value="true"/>
+    
+  </include>
+  
+  <!-- SINGABOAT-VRX Mission Manager -->
+  <node pkg="singaboat_vrx" name="singaboat_mission_manager" type="singaboat_mission_manager.py" output="screen"/>
+
+  <!-- SINGABOAT-VRX Scene Perception -->
+  <node pkg="singaboat_vrx" type="singaboat_scene_perception.py" name="singaboat_scene_perception" output="screen"/>
+
+  <!-- SINGABOAT-VRX Gymkhana Challenge -->
+  <node pkg="singaboat_vrx" type="singaboat_gymkhana_challenge.py" name="singaboat_gymkhana_challenge" output="screen"/>
+    
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+  
+  <!-- SINGABOAT-VRX Bag Export Directory -->
+  <arg name="rosbag_dir" default="$(find singaboat_vrx)/bags"/>
+  
+  <!-- SINGABOAT-VRX Record Bag Files -->
+  <node pkg="rosbag" type="record" name="singaboat_data_recorder" args="-O $(arg rosbag_dir)/singaboat_gymkhana_challenge.bag -x '(.*)/compressed(.*)'"/>
+
+</launch>

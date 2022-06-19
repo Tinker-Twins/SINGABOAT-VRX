@@ -195,6 +195,7 @@
       <topic_wind_direction>/vrx/debug/wind/direction</topic_wind_direction>
     </plugin>
     <scene>
+      <shadows>0</shadows>
       <sky>
         <clouds>
           <speed>12</speed>

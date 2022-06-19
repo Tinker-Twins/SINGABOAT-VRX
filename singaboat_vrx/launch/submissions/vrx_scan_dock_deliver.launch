@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX Mission Manager -->
+  <node pkg="singaboat_vrx" name="singaboat_mission_manager" type="singaboat_mission_manager.py" output="screen"/>
+
+  <!-- SINGABOAT-VRX Scan-Dock-Deliver -->
+  <node pkg="singaboat_vrx" type="singaboat_scan_dock_deliver.py" name="singaboat_scan_dock_deliver" output="screen"/>
+    
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+
+</launch>

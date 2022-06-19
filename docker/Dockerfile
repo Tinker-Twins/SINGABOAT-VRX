@@ -1,7 +1,7 @@
-# Pull ROS Noetic base image.
+# Pull ROS Noetic base image
 FROM ros:noetic-ros-base
 
-# Insall package dependencies.
+# Insall package dependencies
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
  && apt update \
  && apt install -y \
@@ -26,15 +26,21 @@ RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selectio
  && pip3 install --no-cache-dir --upgrade pip \
  && pip3 install --no-cache-dir numpy==1.22.3 scipy==1.8.0 pymap3d==2.7.2 open3d==0.13.0 dubins==1.0.1
 
-# Set working directory.
+# Set working directory
 WORKDIR /home/$USER
 
-# Install VRX packages.
+# Install VRX packages
 RUN mkdir -p VRX_Workspace/src/
 COPY ./ VRX_Workspace/src/
 RUN /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd VRX_Workspace && catkin_make' \
  && /bin/bash -c 'echo "source /home/$USER/VRX_Workspace/devel/setup.bash" >> ~/.bashrc' \
  && /bin/bash -c 'source ~/.bashrc'
 
-# Set entrypoint.
-ENTRYPOINT ["VRX_Workspace/src/SINGABOAT-VRX/singaboat_vrx/scripts/singaboat_vrx.sh"]
+# Install VNC server and GUI tools
+RUN apt update --fix-missing \
+ && apt install -y x11vnc xvfb \
+ && mkdir ~/.vnc \
+ && x11vnc -storepasswd singaboat-vrx ~/.vnc/passwd
+
+# Set entrypoint
+ENTRYPOINT ["VRX_Workspace/src/SINGABOAT-VRX/singaboat_vrx/scripts/entrypoint.sh"]

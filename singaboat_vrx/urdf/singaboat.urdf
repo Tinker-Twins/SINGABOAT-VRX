@@ -884,7 +884,7 @@
   <joint name="wamv/ball_shooter_base_joint" type="revolute">
     <axis xyz="0 0 1"/>
     <limit effort="1000.0" lower="0.0" upper="0" velocity="0"/>
-    <origin rpy="0 0 0.0" xyz="0.55 -0.1 1.3"/>
+    <origin rpy="0 0 0.0" xyz="0.55 0.1 1.3"/>
     <parent link="wamv/base_link"/>
     <child link="wamv/ball_shooter_base_link"/>
   </joint>
