@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+
+  <!-- SINGABOAT-VRX RQT Publisher -->
+  <node pkg="rqt_publisher" type="rqt_publisher" name="singaboat_cmd_vel_pub"/>
+
+  <!-- SINGABOAT-VRX RQT Reconfigure -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="inverse_kinematics_config"/>
+
+</launch>

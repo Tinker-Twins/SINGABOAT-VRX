@@ -23,14 +23,13 @@ class GymkhanaChallenge:
         # Initialize gymkhana challenge
         self.fsm            = FiniteStateMachine() # FiniteStateMachine class instance
         self.next_gate_pose = GeoPoseStamped() # Keeps track of pose (lat, lon, quat) of the next channel gate
-
         self.exit_detected  = False # Boolean flag to check whether channel exit has been detected
         self.asv_pos_lat    = None # ASV position latitude
         self.asv_pos_lon    = None # ASV position longitude
         self.asv_heading    = None # ASV orientation (yaw)
         self.pinger_range   = None # Range measurement from acoustic pinger locater (APL)
         self.pinger_bearing = None # Bearing measurement from acoustic pinger locater (APL)
-        self.state_time      = rospy.get_time() # Task initialization time
+        self.state_time     = rospy.get_time() # State initialization time
         self.start_time     = time.time() # Records time at the start of algorithm
         self.config         = {} # Gymkhana challenge configuration
         # ROS infrastructure
@@ -57,7 +56,7 @@ class GymkhanaChallenge:
     def apl_callback(self, msg):
         self.pinger_range = msg.range
         self.pinger_bearing = msg.bearing
-        goal_tol = self.max_goal_tol if (self.fsm.current_state == 'Find Pinger') else self.min_goal_tol
+        goal_tol = self.max_goal_tol if self.fsm.current_state == 'Find Pinger' else self.min_goal_tol
         if ((self.fsm.current_state == 'Find Pinger') or
             (self.fsm.current_state == 'Hold Position')):
             elapsed = time.time() - self.start_time
@@ -102,13 +101,15 @@ class GymkhanaChallenge:
         if w.shape[0] > 0: # Only if there is any obstacle that the WAM-V may collide with
             wt_avg = numpy.sum(w*y)/numpy.sum(w) # Compute weighted average
             repulsion = numpy.clip(-4.0/wt_avg, -1.0, 1.0) # Compute repulsive field (according to potential field algorithm) due to obstacles
-            print('Obstacles detected towards {}, correcting course by {:.4f} rad'.format('left' if wt_avg > 0 else 'right', self.potential_field_msg.data))
+            if self.debug:
+                print('Obstacles detected towards {}, correcting course by {:.4f} rad'.format('left' if wt_avg > 0 else 'right', self.potential_field_msg.data))
+                print()
         else:
             repulsion = 0.0 # Reset repulsive field
         self.potential_field_msg.data = repulsion
         self.potential_field_pub.publish(self.potential_field_msg)
 
-    def create_path(self, end_wp, start_wp_mode='PASS', end_wp_mode='PLAN'):
+    def create_path(self, end_wp, start_wp_mode='PASS', end_wp_mode='SCAN'):
         '''
         Create a path from the current position of ASV to the given end waypoint.
 
@@ -142,7 +143,7 @@ class GymkhanaChallenge:
 
         :return: None
         '''
-        goal = MissionGoal(mission = path) # Generate action goal (i.e. mission goal)
+        goal = MissionGoal(mission=path) # Generate action goal (i.e. mission goal)
         self.action_client.send_goal(goal) # Send action goal (i.e. mission goal) to the action server (i.e. mission manager)
         self.action_client.wait_for_result() # Wait for result from the action server (i.e. mission manager)
 
@@ -190,12 +191,13 @@ class GymkhanaChallenge:
         goal.pose.orientation.z = asv_quat[2]
         goal.pose.orientation.w = asv_quat[3]
         # Stay at the current location and search for channel entrance
-        path = self.create_path(goal, start_wp_mode='PASS', end_wp_mode='PLAN')
+        path = self.create_path(goal, start_wp_mode='PASS', end_wp_mode='SCAN')
         self.navigate(path)
         # Define the next state
-        if rospy.get_time() - self.state_time >= 30: # 30 seconds to detect entry gate, else find pinger
-            print("Stuck in the channel, aborting channel navigation...")
-            print()
+        if rospy.get_time() - self.state_time >= 60: # 60 seconds to detect entry gate, else find pinger
+            if self.debug:
+                print("Stuck in the channel, aborting channel navigation...")
+                print()
             next_state = 'Find Pinger'
         else:
             self.state_time = rospy.get_time()
@@ -211,13 +213,14 @@ class GymkhanaChallenge:
 
         :return next_state: Name of the next state (depending on the transition logic)
         '''
-        # Navigate towards the center of entry gate
-        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='PLAN')
+        # Navigate towards the center of entry gate and search for gate 1 or channel exit
+        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='SCAN')
         self.navigate(path)
         # Define the next state
-        if rospy.get_time() - self.state_time >= 30: # 30 seconds to detect gate 1, else find pinger
-            print("Stuck in the channel, aborting channel navigation...")
-            print()
+        if rospy.get_time() - self.state_time >= 60: # 60 seconds to detect gate 1, else find pinger
+            if self.debug:
+                print("Stuck in the channel, aborting channel navigation...")
+                print()
             next_state = 'Find Pinger'
         else:
             self.state_time = rospy.get_time()
@@ -233,13 +236,14 @@ class GymkhanaChallenge:
 
         :return next_state: Name of the next state (depending on the transition logic)
         '''
-        # Navigate towards the center of gate 1
-        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='PLAN')
+        # Navigate towards the center of gate 1 and search for gate 2 or channel exit
+        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='SCAN')
         self.navigate(path)
         # Define the next state
-        if rospy.get_time() - self.state_time >= 30: # 30 seconds to detect gate 2, else find pinger
-            print("Stuck in the channel, aborting channel navigation...")
-            print()
+        if rospy.get_time() - self.state_time >= 60: # 60 seconds to detect gate 2, else find pinger
+            if self.debug:
+                print("Stuck in the channel, aborting channel navigation...")
+                print()
             next_state = 'Find Pinger'
         else:
             self.state_time = rospy.get_time()
@@ -255,13 +259,14 @@ class GymkhanaChallenge:
 
         :return next_state: Name of the next state (depending on the transition logic)
         '''
-        # Navigate towards the center of gate 2
-        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='PLAN')
+        # Navigate towards the center of gate 2 and search for gate 3 or channel exit
+        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='SCAN')
         self.navigate(path)
         # Define the next state
-        if rospy.get_time() - self.state_time >= 30: # 30 seconds to detect gate 3, else find pinger
-            print("Stuck in the channel, aborting channel navigation...")
-            print()
+        if rospy.get_time() - self.state_time >= 60: # 60 seconds to detect gate 3, else find pinger
+            if self.debug:
+                print("Stuck in the channel, aborting channel navigation...")
+                print()
             next_state = 'Find Pinger'
         else:
             self.state_time = rospy.get_time()
@@ -277,13 +282,14 @@ class GymkhanaChallenge:
 
         :return next_state: Name of the next state (depending on the transition logic)
         '''
-        # Navigate towards the center of gate 3
-        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='PLAN')
+        # Navigate towards the center of gate 3 and search for channel exit
+        path = self.create_path(self.next_gate_pose, start_wp_mode='PASS', end_wp_mode='SCAN')
         self.navigate(path)
         # Define the next state
-        if rospy.get_time() - self.state_time >= 30: # 30 seconds to detect exit gate, else find pinger
-            print("Stuck in the channel, aborting channel navigation...")
-            print()
+        if rospy.get_time() - self.state_time >= 60: # 60 seconds to detect exit gate, else find pinger
+            if self.debug:
+                print("Stuck in the channel, aborting channel navigation...")
+                print()
             next_state = 'Find Pinger'
         else:
             self.state_time = rospy.get_time()
@@ -323,9 +329,10 @@ class GymkhanaChallenge:
         pinger_bearing = asv_bearing - numpy.rad2deg(self.pinger_bearing) # Compute pinger bearing w.r.t. global frame
         pinger_lat, pinger_lon = self.locate_pinger(self.asv_pos_lat, self.asv_pos_lon, pinger_range, pinger_bearing) # Compute GPS coordinates (lat, lon) of the pinger
         # Print pinger location
-        print("Object Name: Pinger")
-        print("Object Location: {}° N {}° E".format(pinger_lat, pinger_lon))
-        print()
+        if self.debug:
+            print("Object Name: Pinger")
+            print("Object Location: {}° N {}° E".format(pinger_lat, pinger_lon))
+            print()
         goal.pose.position.latitude = pinger_lat
         goal.pose.position.longitude = pinger_lon
         goal.pose.orientation.x = goal_quat[0]
@@ -376,6 +383,7 @@ class GymkhanaChallenge:
         self.max_goal_tol  = config['max_goal_tol'] # Maximum goal tolerance (for finding pinger)
         self.collision_tol = config['collision_tol'] # Obstacle range tolerance for collision avoidance
         self.collision_fov = config['collision_fov'] # Obstacle field of view for collision avoidance
+        self.debug         = config['debug'] # Flag to enable/disable debug messages
         self.config        = config
         return config
 
@@ -430,10 +438,12 @@ if __name__ == "__main__":
         rospy.wait_for_message('/vrx/task/info', Task)
         rospy.wait_for_message('/wamv/sensors/gps/gps/fix', NavSatFix)
         rospy.wait_for_message('/wamv/sensors/imu/imu/data', Imu)
+        rospy.wait_for_message('/wamv/sensors/pingers/pinger/range_bearing', RangeBearing)
 
         while not rospy.is_shutdown():
             gymkhana_challenge_node.fsm.run()
             rate = rospy.Rate(10)
             rate.sleep()
+
     except rospy.ROSInterruptException:
         pass

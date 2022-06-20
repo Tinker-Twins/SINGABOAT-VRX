@@ -1,6 +1,6 @@
 # SINGABOAT-VRX World Building Instructions
 
-1. Change directory to `/singaboat_vrx/worlds` and create/edit a `<WORLD_NAME>.world.xacro` file:
+1. Change directory to `/singaboat_vrx/worlds` and create/edit a `<WORLD_NAME>.world.xacro` file.
 
 2. Build the Gazebo world:
 ```bash

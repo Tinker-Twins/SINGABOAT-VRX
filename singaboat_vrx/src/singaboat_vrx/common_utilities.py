@@ -4,7 +4,6 @@ import math
 import numpy
 import pymap3d
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from geometry_msgs.msg import Twist
 
 ################################################################################
 
@@ -25,6 +24,18 @@ def constrain(input, low, high):
     else:
       output = input
     return output
+
+def euclidean_distance(start_pose, goal_pose):
+    '''
+    Compute the Euclidean distance between two points.
+
+    :param start_pose: Start pose in cartesian coordinates (x, y, yaw)
+    :param goal_pose: Goal pose in cartesian coordinates (x, y, yaw)
+
+    :return dist: Euclidean distance between two points in meters
+    '''
+    dist = math.sqrt((start_pose.position.x - goal_pose.position.x) ** 2 + (start_pose.position.y - goal_pose.position.y) ** 2)
+    return dist
 
 def normalize_angle(theta):
     '''
@@ -58,6 +69,37 @@ def angle_within_half_plane_range(theta_check, theta_min, theta_max):
     cur_quad, start_quad, end_quad = quadrant(theta_check), quadrant(theta_min), quadrant(theta_max)
     result = ((cur_to_min > 0) ^ (cur_to_max > 0)) and ((cur_quad == start_quad) | (cur_quad == end_quad))
     return result
+
+def quadrant(theta):
+    '''
+    Determine cartesian quadrant of a particular angle.
+
+    :param theta: Angle whose cartesian quadrant is to be determined
+
+    :return quadrant: Cartesian quadrant of the given angle
+    '''
+    c = math.cos(theta)
+    s = math.sin(theta)
+    if (c > 0) ^ (s > 0):
+        quadrant = 2 if c < 0 else 4
+    else:
+        quadrant = 1 if c > 0 else 3
+    return quadrant
+
+def cartesian_to_polar(start_pose, goal_pose):
+    '''
+    Convert cartesian pose coordinates to polar pose coordinates.
+
+    :param start_pose: Start pose in cartesian coordinates (x, y, yaw)
+    :param goal_pose: Goal pose in cartesian coordinates (x, y, yaw)
+
+    :return rho, alpha, beta: Polar coordinates describing distance to goal, start heading error, goal heading error
+    '''
+    rho = math.sqrt((start_pose.position.x - goal_pose.position.x) ** 2 + (start_pose.position.y - goal_pose.position.y) ** 2)
+    theta = math.atan2(goal_pose.position.y - start_pose.position.y, goal_pose.position.x - start_pose.position.x)
+    alpha = normalize_angle(theta - start_pose.orientation.z)
+    beta = normalize_angle(normalize_angle(goal_pose.orientation.z - start_pose.orientation.z) - alpha)
+    return rho, alpha, beta
 
 def quaternion_to_euler(quat):
     '''
@@ -179,68 +221,5 @@ def local_to_global_tf(x_ref, y_ref, theta_ref, x_loc, y_loc, theta_loc):
     tgt_obj_glb_tf = numpy.matmul(ref_obj_glb_tf, tgt_obj_loc_tf)
     x_global, y_global, theta_global = tgt_obj_glb_tf[0][0], tgt_obj_glb_tf[1][0], normalize_angle(theta_ref + theta_loc)
     return x_global, y_global, theta_global
-
-def euclidean_distance(start_pose, goal_pose):
-    '''
-    Compute the Euclidean distance between two points.
-
-    :param start_pose: Start pose in cartesian coordinates (x, y, yaw)
-    :param goal_pose: Goal pose in cartesian coordinates (x, y, yaw)
-
-    :return dist: Euclidean distance between two points in meters
-    '''
-    dist = math.sqrt((start_pose.position.x - goal_pose.position.x) ** 2 + (start_pose.position.y - goal_pose.position.y) ** 2)
-    return dist
-
-def cartesian_to_polar(start_pose, goal_pose):
-    '''
-    Convert cartesian pose coordinates to polar pose coordinates.
-
-    :param start_pose: Start pose in cartesian coordinates (x, y, yaw)
-    :param goal_pose: Goal pose in cartesian coordinates (x, y, yaw)
-
-    :return rho, alpha, beta: Polar coordinates describing distance to goal, start heading error, goal heading error
-    '''
-    rho = math.sqrt((start_pose.position.x - goal_pose.position.x) ** 2 + (start_pose.position.y - goal_pose.position.y) ** 2)
-    theta = math.atan2(goal_pose.position.y - start_pose.position.y, goal_pose.position.x - start_pose.position.x)
-    alpha = normalize_angle(theta - start_pose.orientation.z)
-    beta = normalize_angle(normalize_angle(goal_pose.orientation.z - start_pose.orientation.z) - alpha)
-    return rho, alpha, beta
-
-def quadrant(theta):
-    '''
-    Determine cartesian quadrant of a particular angle.
-
-    :param theta: Angle whose cartesian quadrant is to be determined
-
-    :return quadrant: Cartesian quadrant of the given angle
-    '''
-    c = math.cos(theta)
-    s = math.sin(theta)
-    if (c > 0) ^ (s > 0):
-        quadrant = 2 if c < 0 else 4
-    else:
-        quadrant = 1 if c > 0 else 3
-    return quadrant
-
-################################################################################
-
-def polar_controller(rho, alpha, beta, kr=0.1, ka=0.8, kb=-0.15, max_linear_x=1.0, max_angular_z=1.0):
-    '''
-    The function that returns proportional controlled clipped cmd velocity
-    :param rho: distance (of line segment) between 2 points in meter
-    :param alpha: segment wrt start yaw in radian
-    :param beta: goal yaw wrt segment extension in radian
-    :param kr: P param for rho
-    :param ka: P param for alpha
-    :param kb: P param for beta
-    :return: P controlled cmd vel
-    :param max_linear_x: maximum allowed linear velocity in m/s
-    :param max_angular_z: maximum allowed angular velocity in rad/s
-    '''
-    t = Twist()
-    t.linear.x = min(kr * rho, max_linear_x)
-    t.angular.z = min(ka * alpha + kb * beta, max_angular_z)
-    return t
 
 ################################################################################

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX GUI/Headless Mode -->
+  <arg name="headless" default="false"/>
+  
+  <!-- SINGABOAT-VRX Station-Keeping Gazebo Simulation -->
+  <include file="$(find vrx_gazebo)/launch/station_keeping.launch">
+  
+    <!-- SINGABOAT-VRX Station-Keeping Gazebo World -->
+    <arg name="world" value="$(find vrx_gazebo)/worlds/stationkeeping_task.world"/>
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/stationkeeping0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/stationkeeping1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_practice/stationkeeping2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping0.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping1.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping2.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping3.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping4.world"/-->
+    <!--arg name="world" value="$(find vrx_gazebo)/worlds/2022_phase2/stationkeeping5.world"/-->
+ 
+    <!-- SINGABOAT-VRX WAM-V URDF -->
+    <arg name="urdf" value="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+    
+    <!-- SINGABOAT-VRX WAM-V Default Pose -->
+    <arg name="x" default="-532"/>
+    <arg name="y" default="162"/>
+    <arg name="z" default="0.1"/>
+    <arg name="P" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="Y" default="1"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation With GUI -->
+    <arg name="gui" value="false" if="$(arg headless)"/>
+    
+    <!-- SINGABOAT-VRX Start Simulation Paused -->
+    <arg name="paused" value="true" unless="$(arg headless)"/>
+    
+  </include>
+  
+  <!-- SINGABOAT-VRX Station-Keeping -->
+  <node pkg="singaboat_vrx" type="singaboat_station_keeping.py" name="singaboat_station_keeping" output="screen"/>
+
+  <!-- SINGABOAT-VRX Inverse Kinematics -->
+  <node pkg="singaboat_vrx" type="singaboat_inverse_kinematics.py" name="singaboat_inverse_kinematics" output="screen"/>
+
+  <!-- SINGABOAT-VRX RQT Reconfigure -->
+  <!--node pkg="rqt_reconfigure" type="rqt_reconfigure" name="station_keeping_config"/-->
+  
+  <group unless="$(arg headless)">
+    <!-- SINGABOAT-VRX Joint State Publisher -->
+    <node ns="wamv" pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+      <param name="gui" value="false"/>
+    </node>
+    <!-- SINGABOAT-VRX Robot State Publisher -->
+    <node ns="wamv" pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+    <!-- SINGABOAT-VRX RViz -->
+    <arg name="rviz_config" default="$(find singaboat_vrx)/rviz/singaboat_station_keeping.rviz"/>
+    <node pkg="rviz" type="rviz" name="station_keeping_viz" args="-d $(arg rviz_config)"/>
+  </group>
+
+</launch>

@@ -24,8 +24,7 @@
       </wind_objs>
     </xacro:usv_wind_gazebo>
 
-
-  <plugin name="stationkeeping_scoring_plugin"
+    <plugin name="stationkeeping_scoring_plugin"
           filename="libstationkeeping_scoring_plugin.so">
       <vehicle>wamv</vehicle>
       <task_name>station_keeping</task_name>

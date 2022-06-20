@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Scene Perception -->
+  <node pkg="singaboat_vrx" type="singaboat_scene_perception.py" name="singaboat_scene_perception" output="screen"/>
+
+</launch>

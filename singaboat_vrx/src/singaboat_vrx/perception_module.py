@@ -11,9 +11,8 @@ import scipy.stats as stats
 from itertools import combinations, groupby
 from copy import deepcopy
 import rospy
-from std_msgs.msg import Float64MultiArray
-from geometry_msgs.msg import Pose # !!! NOT USED AS PER THE STANDARDS !!!
-from sensor_msgs.msg import Image, PointCloud2
+from geometry_msgs.msg import Pose # !!! Pose.orientation NOT used as a quaternion !!!
+from sensor_msgs.msg import Image
 from vrx_gazebo.srv import ColorSequence
 from singaboat_vrx.common_utilities import gps_to_enu, enu_to_gps, quaternion_to_euler, euler_to_quaternion, local_to_global_tf
 
@@ -36,11 +35,13 @@ class BuoyDetector():
         self.detected_obstacles = [] # List containing positions (in local frame) of detected obstacles
         self.config             = {} # Buoy detector configuration
         # ROS infrastructure
-        self.object_msg     = None
-        self.object_pub     = None
-        self.obstacle_msg   = None
-        self.obstacle_pub   = None
-        self.dyn_reconf_srv = None
+        self.cam_viz_msg        = None
+        self.cam_viz_pub        = None
+        self.object_msg         = None
+        self.object_pub         = None
+        self.obstacle_msg       = None
+        self.obstacle_pub       = None
+        self.dyn_reconf_srv     = None
 
     def task_callback(self, msg):
         self.task_name = msg.name
@@ -76,16 +77,16 @@ class BuoyDetector():
         # WEATHER DETECTION ALGORITHM
         #-----------------------------#
         # ROI for weather detection
-        crop_img_weather_detection = cv_image[520:720, 900:1180]
+        img_roi_weather_detection = cv_image[520:720, 900:1180]
         # Convert from RGB to HSV
-        hsv_img_weather_detection = cv2.cvtColor(crop_img_weather_detection, cv2.COLOR_BGR2HSV)
+        hsv_img_weather_detection = cv2.cvtColor(img_roi_weather_detection, cv2.COLOR_BGR2HSV)
         # Clolr thresholds for weather detection
         lower_gray = numpy.array([0, 0, 0])
         upper_gray = numpy.array([100, 255, 255])
         # Threshold gray color to get binary image
         mask_gray = cv2.inRange(hsv_img_weather_detection, lower_gray, upper_gray)
         # Filter out gray pixels
-        res_gray = cv2.bitwise_and(crop_img_weather_detection, crop_img_weather_detection, mask=mask_gray)
+        res_gray = cv2.bitwise_and(img_roi_weather_detection, img_roi_weather_detection, mask=mask_gray)
         # Compute weather score by averaging gray pixel values
         weather_score = res_gray[..., 2].mean()
         if weather_score > 15:
@@ -100,10 +101,10 @@ class BuoyDetector():
         txt = "Weather: " + weather
         txt_origin = (5, 15)
         txt_color = (0, 255, 0)
-        crop_img_weather_detection = cv2.putText(res_gray.copy(), txt, txt_origin, cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 1, cv2.LINE_AA)
+        img_roi_weather_detection = cv2.putText(res_gray.copy(), txt, txt_origin, cv2.FONT_HERSHEY_SIMPLEX, 0.75, txt_color, 1, cv2.LINE_AA)
         # Display weather detection image
         if self.debug:
-            cv2.imshow("Weather Detection", crop_img_weather_detection)
+            cv2.imshow("Weather Detection", img_roi_weather_detection)
             cv2.waitKey(1)
         #----------------------------#
         # OBJECT DETECTION ALGORITHM
@@ -227,6 +228,7 @@ class BuoyDetector():
                             cY = int(M["m01"] / M["m00"])
                             rgb_objects_tmp.append("mb_marker_buoy_black") # Append semantic label
                             rgb_objects_tmp.append([cX, cY]) # Append object position (in image coordinates)
+                            cv2.putText(crop_img_object_detection, "Black Marker Buoy", (cX+25, cY-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2, cv2.LINE_AA) # Add object label in cyan color
                         else: # Round buoy is circular and has higher aspect ratio
                             # Compute center of the contour
                             M = cv2.moments(contours[i])
@@ -234,6 +236,7 @@ class BuoyDetector():
                             cY = int(M["m01"] / M["m00"])
                             rgb_objects_tmp.append("mb_round_buoy_black") # Append semantic label
                             rgb_objects_tmp.append([cX, cY]) # Append object position (in image coordinates)
+                            cv2.putText(crop_img_object_detection, "Black Round Buoy", (cX+25, cY-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2, cv2.LINE_AA) # Add object label in cyan color
             if self.debug:
                 print()
         else:
@@ -269,6 +272,7 @@ class BuoyDetector():
                         cY = int(M["m01"] / M["m00"])
                         rgb_objects_tmp.append("mb_marker_buoy_red") # Append semantic label
                         rgb_objects_tmp.append([cX,cY]) # Append object position (in image coordinates)
+                        cv2.putText(crop_img_object_detection, "Red Marker Buoy", (cX+25, cY-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2, cv2.LINE_AA) # Add object label in cyan color
             if self.debug:
                 print()
         else:
@@ -304,6 +308,7 @@ class BuoyDetector():
                         cY = int(M["m01"] / M["m00"])
                         rgb_objects_tmp.append("mb_round_buoy_orange") # Append semantic label
                         rgb_objects_tmp.append([cX, cY]) # Append object position (in image coordinates)
+                        cv2.putText(crop_img_object_detection, "Orange Round Buoy", (cX+25, cY-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2, cv2.LINE_AA) # Add object label in cyan color
             if self.debug:
                 print()
         else:
@@ -339,6 +344,7 @@ class BuoyDetector():
                         cY = int(M["m01"] / M["m00"])
                         rgb_objects_tmp.append("mb_marker_buoy_green") # Append semantic label
                         rgb_objects_tmp.append([cX, cY]) # Append object position (in image coordinates)
+                        cv2.putText(crop_img_object_detection, "Green Marker Buoy", (cX+25, cY-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2, cv2.LINE_AA) # Add object label in cyan color
             if self.debug:
                 print()
         else:
@@ -375,6 +381,7 @@ class BuoyDetector():
                         if cY > 20: # Disregard false detections due to sky
                             rgb_objects_tmp.append("mb_marker_buoy_white") # Append semantic label
                             rgb_objects_tmp.append([cX, cY]) # Append object position (in image coordinates)
+                            cv2.putText(crop_img_object_detection, "White Marker Buoy", (cX+25, cY-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2, cv2.LINE_AA) # Add object label in cyan color
             if self.debug:
                 print()
         else:
@@ -385,6 +392,12 @@ class BuoyDetector():
         if self.debug:
             cv2.imshow("Object Detection", crop_img_object_detection)
             cv2.waitKey(1)
+        # Generate and publish `cam_viz` message
+        try: # Try converting OpenCV image to ROS Image message
+            self.cam_viz_msg = self.cv_bridge.cv2_to_imgmsg(crop_img_object_detection, encoding="bgr8")
+        except CvBridgeError as error:
+            print(error)
+        self.cam_viz_pub.publish(self.cam_viz_msg)
         # Update `rgb_objects` list
         rgb_objects = rgb_objects_tmp
         if self.task_name == "perception":
@@ -650,7 +663,7 @@ class BuoyDetector():
         # Handle updated configuration values
         self.gps_offset   = config['gps_offset'] # GPS offset w.r.t. WAM-V along X-axis
         self.lidar_offset = config['lidar_offset'] # LIDAR offset w.r.t. WAM-V along X-axis
-        self.debug        = config['buoy_detector_debug'] # Flag to enable/disable buoy detector debug messages
+        self.debug        = config['debug'] # Flag to enable/disable debug messages
         self.config       = config
         return config
 
@@ -658,62 +671,62 @@ class BuoyDetector():
 
 class GateDetector():
     '''
-    Detects (classifies and localizes) gymkhana channel gates constituted of different
+    Detects (classifies and localizes) channel gates constituted of different
     marker buoys by making use of `BuoyDetector`.
     '''
     def __init__(self):
         # Initialize gate detector
-        self.buoy_detector = BuoyDetector() # BuoyDetector class instance
-        self.asv_pose = Pose() # Current ASV pose in global frame
+        self.buoy_detector    = BuoyDetector() # BuoyDetector class instance
+        self.asv_pose         = Pose() # Current ASV pose in global frame
         self.detected_objects = [] # List of currently detected objects
-        self.channel_buoys = ["mb_marker_buoy_red", "mb_marker_buoy_white", "mb_marker_buoy_green", "mb_marker_buoy_black"] # Reference list of channel defining buoys
+        self.channel_buoys    = ["mb_marker_buoy_red", "mb_marker_buoy_white", "mb_marker_buoy_green", "mb_marker_buoy_black"] # Reference list of channel defining buoys
         # Red buoy variables
-        self.red_buoy_pos = [] # Position (x, y) of red buoy w.r.t. WAM-V frame
+        self.red_buoy_pos      = [] # Position (x, y) of red buoy w.r.t. WAM-V frame
         self.red_buoy_detected = False # Boolean flag to check whether a red buoy has been detected
         # White buoy variables
-        self.white_buoy_pos = [] # Position (x, y) of white buoy w.r.t. WAM-V frame
-        self.white_buoy_enu = [] # Position (x, y) of white buoy w.r.t. global frame
+        self.white_buoy_pos      = [] # Position (x, y) of white buoy w.r.t. WAM-V frame
+        self.white_buoy_enu      = [] # Position (x, y) of white buoy w.r.t. global frame
         self.white_buoy_detected = False # Boolean flag to check whether a white buoy has been detected
         # Green buoy variables
-        self.green_buoy_pos   = [] # Position (x, y) of currently detected green buoy w.r.t. WAM-V frame
-        self.green_buoy_enu   = [] # Position (x, y) of currently detected green buoy w.r.t. global frame
-        self.green_buoy_1_pos = [] # Position (x, y) of green buoy 1 w.r.t. WAM-V frame
-        self.green_buoy_1_enu = [] # Position (x, y) of green buoy 1 w.r.t. global frame
-        self.green_buoy_2_pos = [] # Position (x, y) of green buoy 2 w.r.t. WAM-V frame
-        self.green_buoy_2_enu = [] # Position (x, y) of green buoy 2 w.r.t. global frame
-        self.green_buoy_3_pos = [] # Position (x, y) of green buoy 3 w.r.t. WAM-V frame
-        self.green_buoy_3_enu = [] # Position (x, y) of green buoy 3 w.r.t. global frame
+        self.green_buoy_pos      = [] # Position (x, y) of currently detected green buoy w.r.t. WAM-V frame
+        self.green_buoy_enu      = [] # Position (x, y) of currently detected green buoy w.r.t. global frame
+        self.green_buoy_1_pos    = [] # Position (x, y) of green buoy 1 w.r.t. WAM-V frame
+        self.green_buoy_1_enu    = [] # Position (x, y) of green buoy 1 w.r.t. global frame
+        self.green_buoy_2_pos    = [] # Position (x, y) of green buoy 2 w.r.t. WAM-V frame
+        self.green_buoy_2_enu    = [] # Position (x, y) of green buoy 2 w.r.t. global frame
+        self.green_buoy_3_pos    = [] # Position (x, y) of green buoy 3 w.r.t. WAM-V frame
+        self.green_buoy_3_enu    = [] # Position (x, y) of green buoy 3 w.r.t. global frame
         self.green_buoy_detected = False # Boolean flag to check whether a green buoy has been detected
         # Black buoy variables
-        self.black_buoy_pos = [] # Position (x, y) of black buoy w.r.t. WAM-V frame
-        self.black_buoy_enu = [] # Position (x, y) of black buoy w.r.t. global frame
+        self.black_buoy_pos      = [] # Position (x, y) of black buoy w.r.t. WAM-V frame
+        self.black_buoy_enu      = [] # Position (x, y) of black buoy w.r.t. global frame
         self.black_buoy_detected = False # Boolean flag to check whether a black buoy has been detected
         # Entry gate variables
-        self.entrance_position = []
+        self.entrance_position    = []
         self.entrance_orientation = None
-        self.entrance_detected = False
-        self.entrance_reported= False
+        self.entrance_detected    = False
+        self.entrance_reported    = False
         # Middle gate variables
-        self.gate_position = []
-        self.gate_1_position = []
+        self.gate_position      = []
+        self.gate_1_position    = []
         self.gate_1_orientation = None
-        self.gate_1_detected = False
-        self.gate_1_reported = False
-        self.gate_2_position = []
+        self.gate_1_detected    = False
+        self.gate_1_reported    = False
+        self.gate_2_position    = []
         self.gate_2_orientation = None
-        self.gate_2_detected = False
-        self.gate_2_reported = False
-        self.gate_3_position = []
+        self.gate_2_detected    = False
+        self.gate_2_reported    = False
+        self.gate_3_position    = []
         self.gate_3_orientation = None
-        self.gate_3_detected = False
-        self.gate_3_reported = False
+        self.gate_3_detected    = False
+        self.gate_3_reported    = False
         # Exit gate variables
-        self.exit_position = []
+        self.exit_position    = []
         self.exit_orientation = None
-        self.exit_detected = False
-        self.exit_reported = False
+        self.exit_detected    = False
+        self.exit_reported    = False
         # ROS infrastructure
-        self.config = {} # Gate detector configuration
+        self.config         = {} # Gate detector configuration
         self.dyn_reconf_srv = None # Dynamic reconfigure server
 
     def gps_callback(self, msg):
@@ -992,14 +1005,14 @@ class GateDetector():
         # Buoy detector parameters
         self.buoy_detector.gps_offset   = config['gps_offset'] # GPS offset w.r.t. WAM-V along X-axis
         self.buoy_detector.lidar_offset = config['lidar_offset'] # LIDAR offset w.r.t. WAM-V along X-axis
-        self.buoy_detector.debug        = config['buoy_detector_debug'] # Flag to enable/disable buoy detector debug messages
+        self.buoy_detector.debug        = config['debug'] # Flag to enable/disable buoy detector debug messages
         # Gate detector parameters
         self.min_gate_width  = config['min_gate_width'] # Minimum width of channel gate
         self.max_gate_width  = config['max_gate_width'] # Maximum width of channel gate
         self.dist_to_gate    = config['dist_to_gate'] # Distance between the detected gate and WAM-V frame
         self.gps_offset      = config['gps_offset'] # GPS offset w.r.t. WAM-V along X-axis
         self.lidar_offset    = config['lidar_offset'] # LIDAR offset w.r.t. WAM-V along X-axis
-        self.debug           = config['gate_detector_debug'] # Flag to enable/disable gate detector debug messages
+        self.debug           = config['debug'] # Flag to enable/disable gate detector debug messages
         self.config          = config
         return config
 
@@ -1011,24 +1024,24 @@ class ShapeDetector:
     ---------------
     Contour Shapes:
     ---------------
-    unknown              = Not defined (if the shape has less than 3 vertices)
-    triangle             = Triangle (if the shape has 3 vertices)
-    square               = Square (if the shape has 4 vertices and 1:1 aspect ratio)
-    rectangle_horizontal = Horizontal rectangle (if the shape has 4 vertices and >1 aspect ratio)
-    rectangle_vertical   = Vertical rectangle (if the shape has 4 vertices and <1 aspect ratio)
-    cross                = Cross (if the shape has 12 vertices)
-    circle               = Circle (otherwise)
+    Unknown              : If the shape has less than 3 vertices
+    Triangle             : If the shape has 3 vertices
+    Square               : If the shape has 4 vertices and approximately 1:1 aspect ratio
+    Horizontal Rectangle : If the shape has 4 vertices and >1 aspect ratio
+    Vertical Rectangle   : If the shape has 4 vertices and <1 aspect ratio
+    Cross                : If the shape has 12 vertices
+    Circle               : Otherwise
     '''
     def __init__(self):
         pass
 
-    def detect(self, contour, eps=0.05, ratio=0.5):
+    def detect(self, contour, eps=0.05, ar_tol=0.25):
         '''
         Detect approximated shape of a contour.
 
         :param contour: OpenCV `contour` object
         :param eps    : Maximum distance between the original curve and its approximation
-        :param ratio  : Tolerance of aspect ratio (width/height) to differentiate between square and rectangle
+        :param ar_tol : Tolerance of aspect ratio (width/height) to differentiate between square and rectangle
 
         :return shape: Approximated shape of a contour
         '''
@@ -1036,76 +1049,76 @@ class ShapeDetector:
         approx = cv2.approxPolyDP(contour, eps * perimeter, True) # Approximation of shape of the contour
         # If the shape has less than 3 vertices, it is probably a line or a point
         if len(approx) <= 2:
-            shape = "unknown"
+            shape = "Unknown"
         # If the shape has 3 vertices, it is a triangle
         elif len(approx) == 3:
-            shape = "triangle"
+            shape = "Triangle"
         # If the shape has 4 vertices, it is either a square or a rectangle
         elif len(approx) == 4:
             (x, y, w, h) = cv2.boundingRect(approx) # Fit a bounding box to the approximated shape of the contour
             aspect_ratio = w / float(h) # Calculate aspect ratio of the bounding box
             # If the shape has aspect ratio that is approximately equal to 1, it is a square
-            if (1-ratio) <= aspect_ratio <= (1+ratio):
-                shape = "square"
+            if (1-ar_tol) <= aspect_ratio <= (1+ar_tol):
+                shape = "Square"
             # If the shape has aspect ratio that is more than 1, it is a horizontal rectangle
-            elif aspect_ratio > (1+ratio):
-                shape = "rectangle_horizontal"
+            elif aspect_ratio > (1+ar_tol):
+                shape = "Horizontal Rectangle"
             # If the shape has aspect ratio that is less than 1, it is a vertical rectangle
             else:
-                shape = "rectangle_vertical"
+                shape = "Vertical Rectangle"
         # If the shape has 12 vertices, it is a cross
         elif len(approx) == 12:
-            shape = "cross"
+            shape = "Cross"
         # Otherwise, the shape is assumed to be a circle
         else:
-            shape = "circle"
+            shape = "Circle"
         return shape
 
 ################################################################################
 
 # Reference dictionaries storing HSV thresholding constants (1 to 3 means from brightest to darkest)
-HSV_DICT_1 = {"red":    {"lower": [0, 180, 146],  "upper": [0, 255, 255]},
-              "orange": {"lower": [0, 206, 50], "upper": [71, 255, 255]},
-              "black": {"lower": [0, 0, 0], "upper": [0, 0, 22]},
-              "green": {"lower": [55, 100, 101], "upper": [90, 255, 255]},
-              "white": {"lower": [0, 0, 67], "upper": [51, 0, 151]},
-              "grey": {"lower": [0, 0, 0], "upper": [100, 255, 255]},
-              "blue": {"lower": [103, 84, 222], "upper": [219, 255, 255]},
-              "yellow": {"lower": [6, 84, 208], "upper": [30, 255, 255]}}
-HSV_DICT_2 = {"red":    {"lower": [0, 201, 0],  "upper": [19, 255, 255]},
-              "orange": {"lower": [0, 206, 50], "upper": [71, 255, 255]},
-              "black": {"lower": [0, 0, 0], "upper": [0, 0, 22]},
-              "green": {"lower": [55, 108, 93], "upper": [98, 255, 161]},
-              "white": {"lower": [0, 0, 67], "upper": [51, 0, 151]},
-              "grey": {"lower": [0, 0, 0], "upper": [100, 255, 255]},
-              "blue": {"lower": [115, 84, 22], "upper": [219, 255, 255]},
-              "yellow": {"lower": [6, 217, 119], "upper": [46, 255, 139]}}
-HSV_DICT_3 = {"red":    {"lower": [0, 201, 0],  "upper": [19, 255, 255]},
-              "orange": {"lower": [0, 206, 50], "upper": [71, 255, 255]},
-              "black": {"lower": [0, 0, 0], "upper": [0, 0, 22]},
-              "green": {"lower": [55, 204, 29], "upper": [99, 255, 146]},
-              "white": {"lower": [0, 0, 67], "upper": [51, 0, 151]},
-              "grey": {"lower": [0, 0, 0], "upper": [100, 255, 255]},
-              "blue": {"lower": [115, 39, 45], "upper": [129, 255, 255]},
-              "yellow": {"lower": [6, 217, 16], "upper": [46, 255, 150]}}
+HSV_DICT_1 = {"Red":    {"lower": [0, 180, 146],  "upper": [0, 255, 255]},
+              "Orange": {"lower": [0, 206, 50],   "upper": [71, 255, 255]},
+              "Black":  {"lower": [0, 0, 0],      "upper": [0, 0, 22]},
+              "Green":  {"lower": [55, 100, 101], "upper": [90, 255, 255]},
+              "White":  {"lower": [0, 0, 67],     "upper": [51, 0, 151]},
+              "Gray":   {"lower": [0, 0, 0],      "upper": [100, 255, 255]},
+              "Blue":   {"lower": [103, 84, 222], "upper": [219, 255, 255]},
+              "Yellow": {"lower": [6, 84, 208],   "upper": [30, 255, 255]}}
+HSV_DICT_2 = {"Red":    {"lower": [0, 201, 0],    "upper": [19, 255, 255]},
+              "Orange": {"lower": [0, 206, 50],   "upper": [71, 255, 255]},
+              "Black":  {"lower": [0, 0, 0],      "upper": [0, 0, 22]},
+              "Green":  {"lower": [55, 108, 93],  "upper": [98, 255, 161]},
+              "White":  {"lower": [0, 0, 67],     "upper": [51, 0, 151]},
+              "Gray":   {"lower": [0, 0, 0],      "upper": [100, 255, 255]},
+              "Blue":   {"lower": [115, 84, 22],  "upper": [219, 255, 255]},
+              "Yellow": {"lower": [6, 217, 119],  "upper": [46, 255, 139]}}
+HSV_DICT_3 = {"Red":    {"lower": [0, 201, 0],    "upper": [19, 255, 255]},
+              "Orange": {"lower": [0, 206, 50],   "upper": [71, 255, 255]},
+              "Black":  {"lower": [0, 0, 0],      "upper": [0, 0, 22]},
+              "Green":  {"lower": [55, 204, 29],  "upper": [99, 255, 146]},
+              "White":  {"lower": [0, 0, 67],     "upper": [51, 0, 151]},
+              "Gray":   {"lower": [0, 0, 0],      "upper": [100, 255, 255]},
+              "Blue":   {"lower": [115, 39, 45],  "upper": [129, 255, 255]},
+              "Yellow": {"lower": [6, 217, 16],   "upper": [46, 255, 150]}}
 # Reference dictionary storing blob area thresholding constants
-MIN_BLOB_AREA_DICT = {"red":    8000,
-                      "orange": 15000,
-                      "black":  15000,
-                      "green":  15000,
-                      "white":  15000,
-                      "grey":   15000,
-                      "blue":   15000,
-                      "yellow": 10000}
+MIN_BLOB_AREA_DICT = {"Red":    8000,
+                      "Orange": 15000,
+                      "Black":  15000,
+                      "Green":  15000,
+                      "White":  15000,
+                      "Gray":   15000,
+                      "Blue":   15000,
+                      "Yellow": 10000}
 # Reference dictionary storing contour area thresholding constants
-MIN_CONTOUR_AREA_DICT = {"red":    10,
-                         "orange": 10,
-                         "black":  10,
-                         "green":  10,
-                         "white":  10,
-                         "grey":   10,
-                         "blue":   10,
-                         "yellow": 3}
+MIN_CONTOUR_AREA_DICT = {"Red":    10,
+                         "Orange": 10,
+                         "Black":  10,
+                         "Green":  10,
+                         "White":  10,
+                         "Gray":   10,
+                         "Blue":   10,
+                         "Yellow": 3}
 
 ################################################################################
 
@@ -1113,21 +1126,24 @@ class ColoredRegionDetector:
     '''
     Detects colored regions within an image by making use of `ShapeDetector`.
     '''
-    def __init__(self, colors):
-        self.colors = colors # List of interested colors to be filtered from image
-        self.masks = {} # Masks for each color
-        self.contours = {} # Contours of each color
-        self.areas = {} # Areas of contours of each color
-        self.centroids = {} # Centroids of blobs of each color
-        self.shapes = {} # Shapes of contours of each color
-        self.image = None # Image of current frame
-        self.img_roi = None  # Cropped image of current frame
-        self.image_weather = None # Image for weather detection
-        self.crop_img_weather = None  # Cropped image for weather detection
-        self.record_time = 0 # Count record time
-        self.brightness = [0, 0, 0, 0, 0] # Record the brightness
-        self.shape_detector = ShapeDetector() # ShapeDetector class instance
-        self.debug = False # Flag to enable/disable colored region detector debug messages | TODO: move to config
+    def __init__(self, colors, debug=False):
+        self.shape_detector  = ShapeDetector() # ShapeDetector class instance
+        self.cv_bridge       = CvBridge() # CvBridge object
+        self.colors          = colors # List of interested colors to be filtered from image
+        self.masks           = {} # Masks for each color
+        self.contours        = {} # Contours of each color
+        self.areas           = {} # Areas of contours of each color
+        self.centroids       = {} # Centroids of blobs of each color
+        self.shapes          = {} # Shapes of contours of each color
+        self.image           = None # Current camera frame
+        self.img_roi         = None # Cropped current camera frame based on region of interest (ROI)
+        self.image_weather   = None # Image for weather detection
+        self.img_roi_weather = None # Cropped image for weather detection based on region of interest (ROI)
+        self.record_time     = 0 # Count record time
+        self.brightness      = [0, 0, 0, 0, 0] # Record the brightness
+        self.debug           = debug # Flag to enable/disable colored region detector debug messages
+        # ROS infrastructure
+        self.cam_viz_pub = rospy.Publisher('/rviz/cam_viz', Image, queue_size=10)
 
     def reset(self):
         '''
@@ -1164,10 +1180,10 @@ class ColoredRegionDetector:
                 # Record brightness of every instant (used for averaging)
                 i = int(self.record_time / record_cycle) - 1
                 self.brightness[i] = weather_score
-            # Use real-time brightness, before averaging data is ready
+            # Use real-time brightness before averaging data is ready
             avg_brightness = weather_score
         else:
-            # Use average brightness, once averaging data is ready
+            # Use average brightness once averaging data is ready
             avg_brightness = numpy.mean(self.brightness)
             # Display weather detection image
             if self.debug:
@@ -1175,8 +1191,8 @@ class ColoredRegionDetector:
                 txt_brightness_avg = "Average Brightness: " + str(round(avg_brightness, 2))
                 txt_origin = (5, 15)
                 txt_color = (0, 255, 0)
-                self.crop_img_weather = cv2.putText(img_weather.copy(), txt_brightness_avg, txt_origin, cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 1, cv2.LINE_AA)
-                cv2.imshow("Weather Detection", self.crop_img_weather)
+                self.img_roi_weather = cv2.putText(img_weather.copy(), txt_brightness_avg, txt_origin, cv2.FONT_HERSHEY_SIMPLEX, 0.75, txt_color, 1, cv2.LINE_AA)
+                cv2.imshow("Weather Detection", self.img_roi_weather)
         # Choose HSV thresholding dictionary based on brightness
         if avg_brightness > 55:
             hsv_dict = HSV_DICT_1
@@ -1190,7 +1206,7 @@ class ColoredRegionDetector:
         '''
         Detect colored regions within an image.
 
-        :param image        : Image in which colored regions are to be detected
+        :param image        : Image for colored region detection
         :param weather_image: Reference image for weather detection
 
         :return colored_regions: Colored regions within the image
@@ -1204,7 +1220,7 @@ class ColoredRegionDetector:
         # Crop ROI
         self.img_roi = self.image[0:535, 0:]
         hsv_img = cv2.cvtColor(self.img_roi, cv2.COLOR_BGR2HSV)
-        # Fetch Choose HSV thresholding dictionary based on brightness
+        # Choose HSV thresholding dictionary based on brightness
         hsv_dict = self.hsv_dict()
         # Update mask and contours for each color
         for color in self.colors:
@@ -1212,7 +1228,7 @@ class ColoredRegionDetector:
                 self.masks[color] = cv2.inRange(hsv_img, numpy.array(hsv_dict[color]["lower"]), numpy.array(hsv_dict[color]["upper"]))
                 area = cv2.moments(self.masks[color], False)['m00']
                 if self.debug:
-                    print("Color: {},\tArea: {:.2f}".format(color, area))
+                    print("Color: {}\tArea: {:.2f}".format(color, area))
                     print()
                 if area > MIN_BLOB_AREA_DICT[color]:
                     # Reduce noise
@@ -1238,7 +1254,7 @@ class ColoredRegionDetector:
                                 self.contours[color] = [contour]
                                 self.areas[color] = [area]
                             # Update color to shapes map
-                            shape = self.shape_detector.detect(contour, eps=0.03, ratio=0.4)
+                            shape = self.shape_detector.detect(contour, eps=0.03, ar_tol=0.25)
                             if color in self.shapes:
                                 self.shapes[color].append(shape)
                             else:
@@ -1259,9 +1275,8 @@ class ColoredRegionDetector:
                 if self.debug:
                     print("Unrecognized Color: {}".format(color))
                     print()
-        colored_regions = self.color_to_centroid(drop_shapes=["rectangle_horizontal"]) # Drop detections pertaining to horizontal rectangles
-        if self.debug:
-            self.display_detections() # Display colored region detections (color contours labelled with shape text)
+        colored_regions = self.color_to_centroid(drop_shapes=["Horizontal Rectangle"]) # Drop detections pertaining to horizontal rectangles
+        self.display_detections() # Display colored region detections (color contours labelled with shape text)
         return colored_regions
 
     def color_to_centroid(self, drop_shapes=None):
@@ -1272,7 +1287,7 @@ class ColoredRegionDetector:
 
         :return output: Formatted color-to-centroid detections
         '''
-        drop = ["unknown"]
+        drop = ["Unknown"]
         if drop_shapes is not None:
             drop.extend(drop_shapes)
         assert len(self.contours) == len(self.shapes)
@@ -1299,7 +1314,7 @@ class ColoredRegionDetector:
 
         :return output: Formatted color-to-shape detections
         '''
-        drop = ["unknown"]
+        drop = ["Unknown"]
         if drop_shapes is not None:
             drop.extend(drop_shapes)
         if self.debug:
@@ -1330,7 +1345,7 @@ class ColoredRegionDetector:
             assert color in self.centroids
             assert len(shapes) == len(self.centroids[color])
             for shape, centroid in zip(shapes, self.centroids[color]):
-                output[(color, shape)] = centroid # Assumes that no objects have the same color and shape
+                output[(color, shape)] = centroid # Assumes that no two objects have the same color and shape
         return output
 
     def display_detections(self):
@@ -1347,34 +1362,45 @@ class ColoredRegionDetector:
             for color, contour in self.contours.items():
                 contours.extend(contour)
                 for i in range(len(contour)):
-                    # Add shape text to the image
-                    txt_shape = str(self.shapes[color][i])
+                    # Add detection color and shape text to the image
+                    txt_detection_color = color
+                    if str(self.shapes[color][i]) == "Vertical Rectangle":
+                        txt_detection_shape = "Light Buoy Display"
+                    elif str(self.shapes[color][i]) == "Horizontal Rectangle":
+                        txt_detection_shape = "Rectangle"
+                    else:
+                        txt_detection_shape = str(self.shapes[color][i])
                     txt_color = (255, 255, 0) # Cyan color
-                    cv2.putText(contour_image, txt_shape, (self.centroids[color][i][0], self.centroids[color][i][1]-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 2, cv2.LINE_AA)
+                    cv2.putText(contour_image, txt_detection_color, (self.centroids[color][i][0], self.centroids[color][i][1]-35), cv2.FONT_HERSHEY_SIMPLEX, 0.75, txt_color, 2, cv2.LINE_AA)
+                    cv2.putText(contour_image, txt_detection_shape, (self.centroids[color][i][0], self.centroids[color][i][1]-20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, txt_color, 2, cv2.LINE_AA)
             cv2.drawContours(contour_image, contours, -1, (255, 255, 0), 2) # Draw the contours in cyan color
-            # Display contour image
-            cv2.imshow("Colored Region Detection", contour_image)
-            cv2.waitKey(1)
+            if self.debug:
+                # Display colored region detection image
+                cv2.imshow("Colored Region Detection", contour_image)
+                cv2.waitKey(1)
+            # Generate and publish `cam_viz` message
+            try: # Try converting OpenCV image to ROS Image message
+                cam_viz_msg = self.cv_bridge.cv2_to_imgmsg(contour_image, encoding="bgr8")
+            except CvBridgeError as error:
+                print(error)
+            self.cam_viz_pub.publish(cam_viz_msg)
 
 ################################################################################
 
 class ColorSequenceDetector:
     '''
-    Detects color sequence displayed by the light buoy.
+    Detects and decodes light buoy color sequence by making use of `ColoredRegionDetector`.
     '''
-    def __init__(self, colors, timeout=30):
-        self.colored_region_detector = ColoredRegionDetector(colors=colors)
-        self.color_sequence = []
-        self.last_color_time = rospy.get_time()
-        self.timeout = timeout
-        self.init_time = rospy.get_time()
-        self.black_index = 0
-        self.buoy_centroid = None
-        self.cv_bridge = CvBridge()
-        self.image = None
-        self.debug = False # Flag to enable/disable color sequence detector debug messages | TODO: move to config
-
-        rospy.Subscriber('/wamv/sensors/cameras/camera/image_raw', Image, self.camera_callback, queue_size=1) # TODO: move away from here
+    def __init__(self, colors, timeout=30, debug=False):
+        self.colored_region_detector = ColoredRegionDetector(colors=colors, debug=debug) # ColoredRegionDetector class instance
+        self.cv_bridge               = CvBridge() # CvBridge object
+        self.image                   = None # Current camera frame
+        self.color_sequence          = [] # List to store the color sequence
+        self.black_index             = 0 # Index of black color in the color sequence (used to correct the order of color sequence)
+        self.init_time               = rospy.get_time() # Initial timestamp (time when an object of this class is instantiated)
+        self.last_color_time         = rospy.get_time() # Timestamp when last color was detected
+        self.timeout                 = timeout # Color sequence detector timeout in seconds
+        self.debug                   = debug # Flag to enable/disable color sequence detector debug messages
 
     def camera_callback(self, msg):
         # Try converting ROS Image message to OpenCV image
@@ -1386,59 +1412,51 @@ class ColorSequenceDetector:
 
     def detect(self):
         '''
-        Detect color sequence displayed by th light buoy.
+        Detect and decode color sequence displayed by the light buoy.
 
         :param: None
 
         :return: None
         '''
         while self.image is None:
-            if self.debug:
-                print("Waiting for camera data...")
-                print()
-            rospy.sleep(rospy.Duration(secs=0, nsecs=1000*1000*500))
-        if self.debug:
-            print("Camera data is ready!")
-            print()
+            rospy.sleep(rospy.Duration(secs=0, nsecs=1000*1000*500)) # Wait for camera data
         rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             image = self.image
-            image_weather = self.image #image_mid
+            image_weather = self.image
+            # Detect colored regions
             self.colored_region_detector.detect(image, image_weather)
-            color_to_shape = self.colored_region_detector.color_to_shape(drop_shapes=["rectangle_horizontal"])
+            color_to_shape = self.colored_region_detector.color_to_shape(drop_shapes=["Horizontal Rectangle"])
             if len(color_to_shape) == 0:
                 if self.debug:
-                    print("No regular-shaped colors detected!")
+                    print("No regular-shaped colored regions detected!")
                     print()
             if self.debug:
-                print("All detected colors and shapes:")
+                print("Detected Colored Regions:")
                 print(color_to_shape)
                 print()
             # Update color sequence
             updated_for_this_frame = False
             for color, shapes in color_to_shape.items():
                 for idx, shape in enumerate(shapes):
-                    if shape == "rectangle_vertical":
-                        # Update signal buoy centroid
-                        self.buoy_centroid = self.colored_region_detector.centroids[color][idx]
+                    if shape == "Vertical Rectangle":
                         updated_for_this_frame = True
                         self.push_color(color)
                         break
-                    else: # Use time difference to detect black signal
-                        time_diff = rospy.get_time() - self.last_color_time
+                    else:
+                        time_diff = rospy.get_time() - self.last_color_time # Use time difference to detect black color
                         if time_diff > 1.5:
                             self.black_index = len(self.color_sequence)
                             if self.debug:
-                                print("No rectangle detected for too long, record black index as {}".format(self.black_index))
-                                print(color_to_shape)
+                                print("Light buoy display not detected for too long, recording black index as {}".format(self.black_index))
                                 print()
-                if updated_for_this_frame: # Only update once for each image frame
-                    break
+                if updated_for_this_frame:
+                    break # Only update once for each frame
             if self.debug:
                 print("Current Color Sequence: {}".format(self.color_sequence))
                 print()
             # Check if color sequence is complete and correct
-            if self.is_sequence_complete():
+            if self.sequence_complete():
                 if self.debug:
                     print("Complete Color Sequence: {}".format(self.color_sequence))
                     print()
@@ -1446,10 +1464,9 @@ class ColorSequenceDetector:
                 if self.debug:
                     print("Sorted Color Sequence: {}".format(self.color_sequence))
                     print()
-                print()
                 print("Color Sequence: {}".format(self.color_sequence))
                 print()
-                if self.is_sequence_valid():
+                if self.sequence_valid():
                     if self.debug:
                         print("Color sequence is valid!")
                         print()
@@ -1468,48 +1485,53 @@ class ColorSequenceDetector:
                         print("Color sequence is invalid, starting over...")
                         print()
                     self.color_sequence = [] # Start over
-            # Check timeout, either no signal or detection failed
+            # Check timeout (either no signal or detection failed)
             if rospy.get_time() - self.init_time > self.timeout:
                 print("Color sequence detector timeout, dock to a random bay!")
                 print()
-                return "random", "random"
+                return "Random", "Random"
             rate.sleep()
 
     def push_color(self, color):
         '''
         Push unique color into the color sequence. Start over if some color(s) is/are missed.
 
-        :param color: New color
+        :param color: New color to be pushed into the color sequence
 
         :return: None
         '''
+        # If no color has been pushed so far, push the current color irrespective of any checks
         if len(self.color_sequence) == 0:
             self.color_sequence.append(color)
             self.last_color_time = rospy.get_time()
             return
-        skip_repeated = False
+        # Check if any color(s) is/are missed:
+        # If color sequence is not yet complete and current color was already detected in the past (except for immediately previous detection), it means that some color(s) is/are missed!
+        # Case 1: Start over from current color detection if any color(s) is/are missed
+        # Case 2: Update color sequence if the current color was never detected before
+        # Case 3: Do nothing if the current color is same as the last color
+        color_skipped = False
         for i in range(len(self.color_sequence) - 1):
-            if color == self.color_sequence[i]:
-                skip_repeated = True
+            if color == self.color_sequence[i]: # Case 1
+                color_skipped = True
                 break
-        if skip_repeated:
+        if color_skipped:
             if self.debug:
                 print("Missed a color!")
                 print()
             self.color_sequence = [color]
             self.black_index = 0
-        elif color != self.color_sequence[-1]:
+        elif color != self.color_sequence[-1]: # Case 2
             self.color_sequence.append(color)
-        # Do nothing if the input color is same as the last stored color
         self.last_color_time = rospy.get_time()
 
-    def is_sequence_complete(self):
+    def sequence_complete(self):
         '''
-        Check whether color sequence is detected completely.
+        Check whether color sequence is detected completely (3 or more colors should be detected).
 
         :param: None
 
-        :return result: Boolean flag determining whether color sequence is detected completely
+        :return result: Boolean flag determining whether the color sequence is detected completely
         '''
         result = len(self.color_sequence) >= 3
         return result
@@ -1523,15 +1545,15 @@ class ColorSequenceDetector:
         :return: None
         '''
         assert len(self.color_sequence) == 3
+        if self.debug:
+            print("Black index is {}".format(self.black_index))
+            print()
         new_sequence = []
         for i in range(3):
             new_sequence.append(self.color_sequence[(i + self.black_index) % 3])
         self.color_sequence = new_sequence
-        if self.debug:
-            print("Black index is {}".format(self.black_index))
-            print()
 
-    def is_sequence_valid(self):
+    def sequence_valid(self):
         '''
         Check whether the detected color sequence is valid (3 colors should be distinct).
 
@@ -1539,12 +1561,12 @@ class ColorSequenceDetector:
 
         :return result: Boolean flag determining whether the detected color sequence is valid
         '''
-        result = len(self.color_sequence) == 3 and self.color_sequence[0] != self.color_sequence[1] and self.color_sequence[1] != self.color_sequence[2] and self.color_sequence[0] != self.color_sequence[2]
+        result = len(self.color_sequence) == 3 and self.color_sequence[0] != self.color_sequence[1] and self.color_sequence[1] != self.color_sequence[2] and self.color_sequence[2] != self.color_sequence[0]
         return result
 
     def report_sequence(self):
         '''
-        Reports the detected color sequence to the VRX service.
+        Reports the detected color sequence to the VRX Scan-Dock-Deliver service.
 
         :param: None
 
@@ -1566,23 +1588,23 @@ class ColorSequenceDetector:
 
         :param: None
 
-        :return color, shape: Color and shape of the docking bay placard
+        :return color, shape: Color and shape of the target docking bay placard
         '''
         assert len(self.color_sequence) == 3
         color = self.color_sequence[0]
-        shape_color = self.color_sequence[2]
-        shape = "unknown"
-        if shape_color == "red":
-            shape = "circle"
-        elif shape_color == "green":
-            shape = "triangle"
-        elif shape_color == "blue":
-            shape = "cross"
-        elif shape_color == "yellow":
-            shape = "rectangle"
+        shape_color_code = self.color_sequence[2]
+        shape = "Unknown"
+        if shape_color_code == "Red":
+            shape = "Circle"
+        elif shape_color_code == "Green":
+            shape = "Triangle"
+        elif shape_color_code == "Blue":
+            shape = "Cross"
+        elif shape_color_code == "Yellow":
+            shape = "Horizontal Rectangle"
         else:
             if self.debug:
-                print("Unknown Color: {}".format(shape_color))
+                print("Unknown Color Code: {}".format(shape_color_code))
                 print()
         return color, shape
 
@@ -1592,14 +1614,12 @@ class DockDetector:
     '''
     Detects dock using point cloud data from LIDAR.
     '''
-    def __init__(self):
-        self.cloud = None # Point cloud
+    def __init__(self, debug=False):
+        self.o3d_cloud     = None # Open3D point cloud
+        self.cloud         = None # Point cloud
         self.cropped_cloud = None # Point cloud within restriced ROI
-        self.clusters = [] # Point cloud clusters
-        self.o3d_cloud = None # Open3D point cloud
-        self.debug = False # Flag to enable/disable dock detector debug messages | TODO: move to config
-
-        rospy.Subscriber("/wamv/sensors/lidars/lidar/points", PointCloud2, self.lidar_callback, queue_size=1) # TODO: move away from here
+        self.clusters      = [] # Point cloud clusters
+        self.debug         = debug # Flag to enable/disable dock detector debug messages
 
     def lidar_callback(self, msg):
         cloud_data = list(pc2.read_points(msg, skip_nans=True, field_names=("x", "y", "z")))
@@ -1607,17 +1627,6 @@ class DockDetector:
         if self.o3d_cloud is None:
             self.o3d_cloud = open3d.geometry.PointCloud()
         self.o3d_cloud.points = open3d.utility.Vector3dVector(numpy.array(cloud_data))
-
-    def is_valid(self):
-        '''
-        Check whether the received point cloud is valid (i.e. does it have points).
-
-        :param: None
-
-        :return result: Boolean flag indicating whether the received point cloud has points
-        '''
-        result = self.cloud.has_points() and self.cropped_cloud.has_points()
-        return result
 
     def reset(self):
         '''
@@ -1631,6 +1640,50 @@ class DockDetector:
         self.cropped_cloud = None
         self.clusters = []
 
+    def point_cloud_valid(self):
+        '''
+        Check whether the received point cloud is valid (i.e. does it have points).
+
+        :param: None
+
+        :return result: Boolean flag indicating whether the received point cloud has points
+        '''
+        result = self.cloud.has_points() and self.cropped_cloud.has_points()
+        return result
+
+    def update_cloud(self, cloud):
+        '''
+        Update the point cloud.
+
+        :param cloud: Point cloud
+
+        :return result: Boolean flag determining validity of the point cloud
+        '''
+        if cloud is None:
+            self.cloud = deepcopy(self.o3d_cloud)
+            self.cropped_cloud = deepcopy(self.o3d_cloud)
+        else:
+            self.cloud = cloud
+            self.cropped_cloud = cloud
+        result = self.point_cloud_valid()
+        return result
+
+    def crop_cloud(self):
+        '''
+        Fit bounding box to the point cloud and crop it.
+
+        :param: None
+
+        :return: None
+        '''
+        min_bounds = numpy.array([1, -50, -10])
+        max_bounds = numpy.array([100, 50, 10])
+        box = open3d.geometry.AxisAlignedBoundingBox(min_bounds, max_bounds)
+        if self.debug:
+            print("Bounding Box: {}".format(box))
+            print()
+        self.cropped_cloud = self.cropped_cloud.crop(box)
+
     def cluster(self):
         '''
         Detect and group local point cloud clusters together.
@@ -1639,7 +1692,7 @@ class DockDetector:
 
         :return result: Boolean result of the clustering operation
         '''
-        if not self.is_valid():
+        if not self.point_cloud_valid(): # Sanity check
             if self.debug:
                 print("Received invalid point cloud, cannot perform clustering!")
                 print()
@@ -1659,39 +1712,6 @@ class DockDetector:
             return result
         result = False
         return result
-
-    def update_cloud(self, cloud):
-        '''
-        Update the point cloud.
-
-        :param cloud: Point cloud
-
-        :return result: Boolean flag determining validity of the point cloud
-        '''
-        if cloud is None:
-            self.cloud = deepcopy(self.o3d_cloud)
-            self.cropped_cloud = deepcopy(self.o3d_cloud)
-        else:
-            self.cloud = cloud
-            self.cropped_cloud = cloud
-        result = self.is_valid()
-        return result
-
-    def crop_cloud(self):
-        '''
-        Fit bounding box to the point cloud and crop it.
-
-        :param: None
-
-        :return: None
-        '''
-        min_bounds = numpy.array([1, -50, -10])
-        max_bounds = numpy.array([100, 50, 10])
-        box = open3d.geometry.AxisAlignedBoundingBox(min_bounds, max_bounds)
-        if self.debug:
-            print("Bounding Box: {}".format(box))
-            print()
-        self.cropped_cloud = self.cropped_cloud.crop(box)
 
     def filter_bays_by_collinear_centroids(self, cloud=None):
         '''
@@ -1732,14 +1752,14 @@ class DockDetector:
                 x, y, _ = collapsed_centroids[bay_id]
                 bays.append([x, y, theta])
             if self.debug:
-                print("Bay positions w.r.t. WAM-V:")
+                print("Bay poses w.r.t. WAM-V:")
                 print(bays)
                 print()
         return bays
 
     def filter_bays_by_plane_normals(self, cloud=None):
         '''
-        Filter docking bays based on their collinearity in terms of heading.
+        Filter docking bays based on collinearity w.r.t. their plane normals (i.e. their heading).
 
         :param cloud: Updated point cloud
 
@@ -1760,7 +1780,7 @@ class DockDetector:
         points = numpy.asarray(self.cropped_cloud.points)
         filtered_points = []
         for idx, normal in enumerate(normals):
-            if abs(normal[2]) < 0.2: # Only keep horizontal points
+            if abs(normal[2]) < 0.2: # Only keep horizontal plane normals
                 filtered_points.append(points[idx])
         if self.debug:
             print("Number of points before applying plane filter: {}".format(len(points)))
@@ -1794,7 +1814,7 @@ class DockDetector:
         :return bays: List of bays satisfying the orientation and distance criteria
         '''
         bays = []
-        if centroids is None or normals is None:
+        if centroids is None or normals is None: # Sanity check
             if self.debug:
                 print("Cannot filter docking bays without any centroids or normals!")
                 print()
@@ -1845,14 +1865,14 @@ class DockDetector:
             print("Similar Horizontal Normal IDs:")
             print(similar_ids)
             print()
-        # Keep planes with centroids far away
+        # Keep planes with appropriate inter-centroid distance
         bay_ids = []
-        for simi_ids in similar_ids:
-            if len(simi_ids) == 3:
+        for sim_ids in similar_ids:
+            if len(sim_ids) == 3:
                 if self.debug:
                     print("Got 3 similar IDs!")
                     print()
-                all_xy = [(centroids[i][0], centroids[i][1]) for i in simi_ids]
+                all_xy = [(centroids[i][0], centroids[i][1]) for i in sim_ids]
                 is_bay = True
                 for i in range(2):
                     x1, y1 = all_xy[i]
@@ -1865,13 +1885,13 @@ class DockDetector:
                     if self.debug:
                         print("These 3 centroids meet bay interval requirements!")
                         print()
-                    bay_ids = simi_ids
+                    bay_ids = sim_ids
                     break
-            # At least 2 docking bays
-            if len(simi_ids) > 1:
+            # At least 2 docking bays should be detected
+            if len(sim_ids) > 1:
                 hori_dists = []
-                for id in simi_ids:
-                    # Try to merge clusters in a vertical plane
+                for id in sim_ids:
+                    # Try to merge clusters in the vertical plane
                     x, y, z = centroids[id]
                     dist = numpy.sqrt(x ** 2 + y ** 2)
                     far_enough = True
@@ -1882,7 +1902,7 @@ class DockDetector:
                     if far_enough:
                         hori_dists.append(dist)
                         bay_ids.append(id)
-            # Currently only consider the first similar group since bay pattern is unique in the scene
+            # Only consider the first similar group since bay pattern is unique in the scene
             if len(bay_ids) > 1:
                 break
         if self.debug:
@@ -1898,7 +1918,7 @@ class DockDetector:
         # Note: Corner case is bays stand across negative Y-axis of WAM-V frame
         bays = sorted(bays, key=lambda elem: math.atan2(elem[1], elem[0]), reverse=True)
         if self.debug:
-            print("Bay positions w.r.t. WAM-V:")
+            print("Bay poses w.r.t. WAM-V:")
             print(bays)
             print()
         return bays
@@ -1909,17 +1929,18 @@ class DockDetector:
 
         :param cloud: Updated point cloud
 
-        :return plane_params: (a, b, c, d) in ax + by + cz + d = 0, inliers of the point cloud
+        :return plane_model, inlier_cloud: Plane model (i.e. [a, b, c, d] in ax + by + cz + d = 0), inliers of the point cloud
         '''
         self.reset()
         self.update_cloud(cloud)
         self.crop_cloud()
-        if self.is_valid():
+        if self.point_cloud_valid():
             [a, b, c, d], inliers = self.cropped_cloud.segment_plane(distance_threshold=0.05, ransac_n=5, num_iterations=1000)
-            plane_params = [a, b, c, d], self.cropped_cloud.select_by_index(inliers)
-            return plane_params
-        plane_params = None, None
-        return plane_params
+            plane_model = [a, b, c, d]
+            inlier_cloud = self.cropped_cloud.select_by_index(inliers)
+            return plane_model, inlier_cloud
+        plane_model = inlier_cloud = None
+        return plane_model, inlier_cloud
 
     def cluster_centroids(self):
         '''
@@ -1955,7 +1976,7 @@ class DockDetector:
 
         :param: None
 
-        :return centroids: Centroids of point cloud clusters
+        :return centroids: Centroids of boxes bounding the point cloud clusters
         '''
         assert len(self.clusters) > 0
         max_cluster = self.clusters.max()
@@ -2005,11 +2026,11 @@ class DockDetector:
 
     def cluster_normals(self):
         '''
-        Compute cluster (plane) normals.
+        Compute cluster point normals.
 
         :param: None
 
-        :return normals_avg: Average point normals within each cluster
+        :return normals_avg: Average point normal within each cluster
         '''
         assert len(self.clusters) > 0
         self.cropped_cloud.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=2, max_nn=30))
@@ -2025,7 +2046,7 @@ class DockDetector:
         for normal in normals:
             outward_normals.append(-normal)
         self.cropped_cloud.normals = open3d.utility.Vector3dVector(numpy.array(outward_normals))
-        # Average point normals within each cluster to get cluster (plane) normals
+        # Average point normals within each cluster to get point normals
         normals = numpy.asarray(self.cropped_cloud.normals)
         max_cluster = self.clusters.max()
         normals_avg = numpy.zeros((max_cluster + 1, 3))
@@ -2047,7 +2068,7 @@ class DockDetector:
 
         :param centroids: Point cloud cluster centroids
 
-        :return ids: IDs of 3 centroids that form a line (if there is any)
+        :return ids: IDs of 3 centroids that form a line (if any)
         '''
         centroids_num = len(centroids)
         if centroids_num <= 3:
@@ -2089,7 +2110,7 @@ class DockDetector:
 
     def average_normal_angle(self, centroids, ids):
         '''
-        Compute average normal angle of point cloud cluster centroids
+        Compute average normal angle of point cloud cluster centroids.
 
         :param centroids: Point cloud cluster centroids
         :param ids      : Point cloud cluster centroid IDs
@@ -2118,16 +2139,13 @@ class BayDetector:
     '''
     Detects docking bays by making use of `ColoredRegionDetector` and `DockDetector`.
     '''
-    def __init__(self, colors):
-        self.color = None
-        self.shape = None
-        self.dock_detector = DockDetector()
-        self.colored_region_detector = ColoredRegionDetector(colors)
-        self.cv_bridge = CvBridge() # CvBridge object
-        self.debug = False # Flag to enable/disable bay detector debug messages | TODO: move to config
-
-        rospy.Subscriber('/wamv/sensors/cameras/camera/image_raw', Image, self.camera_callback, queue_size=1) # TODO: move away from here
-        self.obstacle_pub = rospy.Publisher('/obstacle_list', Float64MultiArray, queue_size=10) # TODO: move away from here
+    def __init__(self, colors, debug=False):
+        self.dock_detector           = DockDetector(debug=debug) # DockDetector class instance
+        self.colored_region_detector = ColoredRegionDetector(colors, debug=debug) # ColoredRegionDetector class instance
+        self.cv_bridge               = CvBridge() # CvBridge object
+        self.color                   = None # Color of target docking bay placard symbol
+        self.shape                   = None # Shape of target docking bay placard symbol
+        self.debug                   = debug # Flag to enable/disable bay detector debug messages
 
     def camera_callback(self, msg):
         # Try converting ROS Image message to OpenCV image
@@ -2137,115 +2155,50 @@ class BayDetector:
             print(error)
             print()
 
-    def set_target_color_shape(self, target_color, target_shape):
-        self.color = target_color
-        self.shape = target_shape
+    def detect(self, cloud=None):
+        '''
+        Detect docking bays and identify the target docking bay.
 
-    def get_sorted_colored_shapes(self):
-        if self.image is None:
-            return {}
-        image = self.image
-        image_weather = self.image
-        self.colored_region_detector.detect(image, image_weather)
-        color_shape_to_centroid = self.colored_region_detector.color_shape_to_centroid()
-        if self.debug:
-            print("Blobs before filtering by shape:")
-            print(color_shape_to_centroid)
-            print()
-        colorshape2centroid_new = self.filter_by_shape(color_shape_to_centroid, drop_shapes=["rectangle_horizontal"]) # Remove items that have unwanted shapes
-        if self.debug:
-            print("Blobs after filtering by shape:")
-            print(colorshape2centroid_new)
-            print()
-        # Sort by centroid x value from left to right (i.e. from small to large)
-        colorshape2centroid_new = {k: v for k, v in sorted(color_shape_to_centroid.items(), key=lambda item: item[1][0])}
-        if self.debug:
-            print("Sorted blobs:")
-            print(colorshape2centroid_new)
-            print()
-        return colorshape2centroid_new
+        :param cloud: Updated point cloud
 
-    def filter_by_shape(self, color_shape_to_centroid, drop_shapes=None):
-        drop = ["unknown"]
-        if drop_shapes is not None:
-            drop.extend(drop_shapes)
-        if self.debug:
-            print("Dropping following shapes for bay detection:")
-            print(drop)
-            print()
-        another = color_shape_to_centroid
-        for (color, shape), centroid in color_shape_to_centroid.copy().items():
-            if shape in drop:
-                another.pop((color, shape), None)
-        return another
-
-    def obstacle_publish(self):
-        obstacle = Float64MultiArray()
-        obstacle_pos_list = []
-        centroids = self.dock_detector.cluster_centroids()
-        if len(centroids) > 0:
-            for i in range(len(centroids)):
-                obstacle_pos_list.append((centroids[i, 0:2]).tolist())
-            obstacle.data = sum(obstacle_pos_list, [])
-            self.obstacle_pub.publish(obstacle)
-
-    def get_plane_theta_and_cloud(self):
-        plane_model, inlier_cloud = self.dock_detector.filter_plane()
-        if plane_model is not None and inlier_cloud is not None:
-            [a, b, c, d] = plane_model
-            if self.debug:
-                print("Plane Model: {}, {}, {}, {}".format(a, b, c, d))
-                print()
-            # Make sure gradient of plane is basically horizontal (i.e. bay plane is vertical)
-            theta = math.atan2(b, a) if abs(c) < 0.1 else None
-            return theta, inlier_cloud
-        if self.debug:
-            print("Plane filter failed!")
-            print()
-        return None, None
-
-    def detect(self, detect_bay_only=False, cloud=None):
-        bay = None
-        bay_poses = self.dock_detector.filter_bays_by_plane_normals(cloud)
-        bay_num = len(bay_poses)
+        :return target_bay_pose, all_bay_poses: Pose of the target bay, Poses of all the bays
+        '''
+        target_bay_pose = None
+        all_bay_poses = self.dock_detector.filter_bays_by_plane_normals(cloud)
+        bay_num = len(all_bay_poses)
         if bay_num != 3:
             if self.debug:
-                print("Plane filter did not detect 3 bays, try line filter!")
+                print("Plane filter did not detect 3 bays, trying line filter...")
                 print()
-            bay_poses = self.dock_detector.filter_bays_by_collinear_centroids(cloud)
-            bay_num = len(bay_poses)
+            all_bay_poses = self.dock_detector.filter_bays_by_collinear_centroids(cloud)
+            bay_num = len(all_bay_poses)
             if bay_num == 0:
                 if self.debug:
                     print("Line filter did not detect any bays!")
                     print()
-                return bay, bay_poses
-        if bay_num == 3 and detect_bay_only:
-            bay = bay_poses[1]
-            if self.debug:
-                print("Plane filter detectd 3 bays, but return the middle bay pose!")
-                print()
-            return bay, bay_poses
+                return target_bay_pose, all_bay_poses
         if self.debug:
             print("Plane filter detected {} bays.".format(bay_num))
             print()
-        color_shape_to_centroid = self.get_sorted_colored_shapes()
+        color_shape_to_centroid = self.sort_bay_symbols()
         cs_num = len(color_shape_to_centroid)
         if cs_num == 0:
             if self.debug:
                 print("No blobs detected, no need to continue...")
                 print()
-            return bay, bay_poses
+            return target_bay_pose, all_bay_poses
         if self.debug:
             print("Number of blobs: {}".format(cs_num))
             print("Number of bays:  {}".format(bay_num))
             print()
-        if self.color == "random" or self.shape == "random":
+        if self.color == "Random" or self.shape == "Random":
+            print("Unspecified docking bay placard color or shape, docking to a random bay...")
+            idx = numpy.random.randint(3)
+            print("Bay Number: {}".format(idx+1))
+            target_bay_pose = all_bay_poses[idx]
+            print("Bay Pose: {}".format(target_bay_pose))
             print()
-            print("Unspecified docking bay placard color or shape, docking to the left bay...")
-            bay = bay_poses[0]
-            print("Bay Pose: {}".format(bay))
-            print()
-            return bay, bay_poses
+            return target_bay_pose, all_bay_poses
         if cs_num == bay_num:
             if self.debug:
                 print("Number of detected blobs matched the bay count!")
@@ -2254,24 +2207,85 @@ class BayDetector:
                 # According to task description, each bay has unique color and shape
                 # Since shape detection is unstable, just use color
                 if cs[0] == self.color:
-                    print()
                     print("Docking bay placard color and shape matched, docking to the target bay...")
-                    bay = bay_poses[idx]
-                    print("Bay Pose: {}".format(bay))
+                    print("Placard Symbol Color: {}".format(self.color))
+                    shape = "Rectangle" if self.shape == "Horizontal Rectangle" else self.shape
+                    print("Placard Symbol Shape: {}".format(shape))
+                    print("Bay Number: {}".format(idx+1))
+                    target_bay_pose = all_bay_poses[idx]
+                    print("Bay Pose: {}".format(target_bay_pose))
                     print()
-                    return bay, bay_poses
+                    return target_bay_pose, all_bay_poses
             if cs_num == 3:
+                print("Docking bay placard color or shape did not match, docking to a random bay...")
+                idx = numpy.random.randint(3)
+                print("Bay Number: {}".format(idx+1))
+                target_bay_pose = all_bay_poses[idx]
+                print("Bay Pose: {}".format(target_bay_pose))
                 print()
-                print("Docking bay placard color or shape did not match, docking to the middle bay...")
-                bay = bay_poses[1]
-                print("Bay Pose: {}".format(bay))
-                print()
-                return bay, bay_poses
+                return target_bay_pose, all_bay_poses
             if self.debug:
                 print("Cannot find target color and shape!")
         else:
             if self.debug:
                 print("Number of detected blobs did not match the bay count!")
-        return bay, bay_poses
+        return target_bay_pose, all_bay_poses
+
+    def target_bay_symbol(self, target_color, target_shape):
+        '''
+        Load color and shape of target docking bay placard symbol.
+
+        :param target_color: Color of target docking bay placard symbol
+        :param target_shape: Shape of target docking bay placard symbol
+
+        :return: None
+        '''
+        self.color = target_color
+        self.shape = target_shape
+
+    def sort_bay_symbols(self):
+        '''
+        Sort docking bay placard symbols (colors and shapes) from left to right.
+
+        :param: None
+
+        :return sorted_bay_symbols: Docking bay placard symbols (colors and shapes) sorted from left to right.
+        '''
+        if self.image is None: # Sanity check
+            return {}
+        image = self.image
+        image_weather = self.image
+        self.colored_region_detector.detect(image, image_weather)
+        color_shape_to_centroid = self.colored_region_detector.color_shape_to_centroid()
+        # Sort by centroid X-coordinate value (i.e. from left to right)
+        sorted_bay_symbols = {k: v for k, v in sorted(color_shape_to_centroid.items(), key=lambda item: item[1][0])}
+        if self.debug:
+            print("Sorted Colored Shapes:")
+            print(sorted_bay_symbols)
+            print()
+        return sorted_bay_symbols
+
+    def plane_angle_and_cloud(self):
+        '''
+        Compute angle and point cloud of the dock plane.
+
+        :param: None
+
+        :return theta, inlier_cloud: Angle of dock plane, Point cloud of dock plane
+        '''
+        plane_model, inlier_cloud = self.dock_detector.filter_plane()
+        if plane_model is not None and inlier_cloud is not None:
+            [a, b, c, d] = plane_model
+            if self.debug:
+                print("Plane Model: {}, {}, {}, {}".format(a, b, c, d))
+                print()
+            # Make sure gradient of plane is basically horizontal (i.e. dock plane is vertical)
+            theta = math.atan2(b, a) if abs(c) < 0.1 else None
+            return theta, inlier_cloud
+        if self.debug:
+            print("Plane filter failed!")
+            print()
+        theta = inlier_cloud = None
+        return theta, inlier_cloud
 
 ################################################################################

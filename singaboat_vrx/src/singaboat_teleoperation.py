@@ -15,6 +15,7 @@ from singaboat_vrx.common_utilities import constrain
 ################################################################################
 
 info = """
+
 -------------------------------------
 SINGABOAT - WAM-V Teleoperation Panel
 -------------------------------------
@@ -33,6 +34,7 @@ Press CTRL+C to quit
 
 NOTE: Press keys within this terminal
 -------------------------------------
+
 """
 
 error = """
@@ -80,7 +82,8 @@ if __name__=="__main__":
     right_thrust_cmd  = 0.0
 
     try:
-        print(info)
+        if dyn_reconf_srv.config['debug']:
+            print(info)
 
         while(1):
             key = get_key()
@@ -123,7 +126,8 @@ if __name__=="__main__":
             right_thruster_pub.publish(right_thrust_cmd)
 
     except:
-        print(error)
+        if dyn_reconf_srv.config['debug']:
+            print(error)
 
     finally:
         center_thrust_cmd = 0.0

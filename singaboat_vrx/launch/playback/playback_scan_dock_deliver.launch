@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- SINGABOAT-VRX Set Clock to Simulation Time -->
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- SINGABOAT-VRX WAM-V URDF Model -->
+  <param name="wamv/robot_description" textfile="$(find singaboat_vrx)/urdf/singaboat.urdf"/>
+  
+  <!-- SINGABOAT-VRX Joint State Publisher -->
+  <node ns="wamv" pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+    <param name="gui" value="false"/>
+  </node>
+  
+  <!-- SINGABOAT-VRX Robot State Publisher -->
+  <node ns="wamv" pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <!-- SINGABOAT-VRX RViz -->
+  <arg name="rviz_config" default="$(find singaboat_vrx)/rviz/singaboat_scan_dock_deliver.rviz"/>
+  <node pkg="rviz" type="rviz" name="scan_dock_deliver_viz" args="-d $(arg rviz_config)"/>
+  
+  <!-- SINGABOAT-VRX Bag Import Directory -->
+  <arg name="rosbag_dir" default="$(find singaboat_vrx)/bags"/>
+  
+  <!-- SINGABOAT-VRX Play Bag Files -->
+  <node pkg="rosbag" type="play" name="singaboat_data_player" args="--clock --hz=1 $(arg rosbag_dir)/singaboat_scan_dock_deliver.bag" output="screen"/>
+
+</launch>
