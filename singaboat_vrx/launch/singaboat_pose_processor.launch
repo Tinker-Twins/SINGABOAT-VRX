@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Pose Processor -->
+  <node pkg="singaboat_vrx" type="singaboat_pose_processor.py" name="singaboat_pose_processor" output="screen"/>
+  
+  <!-- SINGABOAT-VRX RQT Publisher -->
+  <node pkg="rqt_publisher" type="rqt_publisher" name="singaboat_wp_idx_pub"/>
+
+</launch>

@@ -11,15 +11,15 @@ class PIDController:
     accumulated error (integral action) and rate of change of error (derivative action).
     '''
     def __init__(self, kP, kI, kD, kS):
-        self.kP       = kP # Proportional gain
-        self.kI       = kI # Integral gain
-        self.kD       = kD # Derivative gain
-        self.kS       = kS # Saturation constant (error history buffer size)
-        self.err_int  = 0 # Error integral
-        self.err_dif  = 0 # Error difference
+        self.kP = kP # Proportional gain
+        self.kI = kI # Integral gain
+        self.kD = kD # Derivative gain
+        self.kS = kS # Saturation constant (error history buffer size)
+        self.err_int = 0 # Error integral
+        self.err_dif = 0 # Error difference
         self.err_prev = 0 # Previous error
         self.err_hist = queue.Queue(self.kS) # Limited buffer of error history
-        self.t_prev   = 0 # Previous time
+        self.t_prev = 0 # Previous time
 
     def control(self, err, t):
         '''
@@ -50,9 +50,9 @@ class PolarController:
     start heading error (alpha) and goal heading error (beta).
     '''
     def __init__(self, k_rho, k_alpha, k_beta, max_lin_vel, max_ang_vel):
-        self.k_rho       = k_rho # Proportional gain for rho
-        self.k_alpha     = k_alpha # Proportional gain for alpha
-        self.k_beta      = k_beta # Proportional gain for beta
+        self.k_rho = k_rho # Proportional gain for rho
+        self.k_alpha = k_alpha # Proportional gain for alpha
+        self.k_beta = k_beta # Proportional gain for beta
         self.max_lin_vel = max_lin_vel # Maximum allowed linear velocity in m/s
         self.max_ang_vel = max_ang_vel # Maximum allowed angular velocity in rad/s
 

@@ -35,7 +35,8 @@ catkin_python_setup()
 # Dynamic reconfigure options
 generate_dynamic_reconfigure_options(
   cfg/teleoperation_config.cfg
-  cfg/inverse_kinematics_config.cfg
+  cfg/pose_processor_config.cfg
+  cfg/ik_solver_config.cfg
   cfg/task_manager_config.cfg
   cfg/mission_manager_config.cfg
   cfg/station_keeping_config.cfg
@@ -91,7 +92,8 @@ catkin_package(CATKIN_DEPENDS
 # Install all the script files
 catkin_install_python(PROGRAMS
   src/singaboat_teleoperation.py
-  src/singaboat_inverse_kinematics.py
+  src/singaboat_pose_processor.py
+  src/singaboat_ik_solver.py
   src/singaboat_mission_manager.py
   src/singaboat_task_manager.py
   src/singaboat_station_keeping.py
@@ -102,13 +104,13 @@ catkin_install_python(PROGRAMS
   src/singaboat_scan_dock_deliver.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-# Install all the script config files
+# Install all the cfg files
 install(DIRECTORY cfg/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/cfg)
 
-# Install all the WAM-V config files
-install(DIRECTORY wamv/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/wamv)
+# Install all the config files
+install(DIRECTORY config/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
 
 # Install all the world files
 install(DIRECTORY worlds/

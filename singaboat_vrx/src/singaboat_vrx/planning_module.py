@@ -107,7 +107,7 @@ class Mission:
         PASS = Drive-through waypoint (used for general path tracking)
         HALT = Temporary station-keeping waypoint (used for accurate path tracking)
         PARK = Indefinite station-keeping waypoint (used for station-keeping)
-        SCAN = Scanning waypoint (used for halting and scanning around)
+        PLAN = Planning waypoint (used for planning a path to the next waypoint)
         '''
         def __init__(self, wp_mode = "NONE", gps_lat = -1, gps_lon = -1, enu_x = -1, enu_y = -1, heading = 0):
             self.wp_mode = wp_mode
@@ -194,26 +194,26 @@ class DubinsPath:
 
 class PathPlanner:
     def __init__(self, mission, path_creator, handover_offset=5):
-        self.mission           = mission # Mission
-        self.path_creator      = path_creator # Path creator
-        self.path_hdlr         = path_creator(mission) # Path creater object
-        self.mission_complete  = False # Mission completion flag
-        self.lap_count         = 1 # Number of times to repeat the mission
-        self.lap_counter       = 0 # Lap counter
-        self.original_path     = self.path_hdlr.path # Original path
-        self.working_path      = self.original_path.copy() # Working path
-        self.working_index     = 0 # Index of waypoint on the working path
-        self.original_index    = 0 # Index of waypoint on the original path
-        self.current_wp        = self.original_path[0] # Current waypoint
-        self.next_wp           = self.original_path[0] # Next waypoint
-        self.proj_heading      = 0 # Projected heading at the goal
-        self.desired_heading   = 0 # Desired (go-to-goal) heading of the WAM-V
+        self.mission = mission # Mission
+        self.path_creator = path_creator # Path creator
+        self.path_hdlr = path_creator(mission) # Path creater object
+        self.mission_complete = False # Mission completion flag
+        self.lap_count = 1 # Number of times to repeat the mission
+        self.lap_counter = 0 # Lap counter
+        self.original_path = self.path_hdlr.path # Original path
+        self.working_path = self.original_path.copy() # Working path
+        self.working_index = 0 # Index of waypoint on the working path
+        self.original_index = 0 # Index of waypoint on the original path
+        self.current_wp = self.original_path[0] # Current waypoint
+        self.next_wp = self.original_path[0] # Next waypoint
+        self.proj_heading = 0 # Projected heading at the goal
+        self.desired_heading = 0 # Desired (go-to-goal) heading of the WAM-V
         self.cross_track_error = 0 # Cross-track error in meters
-        self.beta_hat          = 0 # Integral term for computing the desired heading using ILOS guidance method
-        self.look_ahead_dist   = 30 # Lookahead distance in meters
-        self.min_wp_dist       = 25 # Minimum distance between two waypoints so as to allow the WAM-V to get on track
-        self.max_deviation     = 10 # Maximum permissible deviation from path before triggering a replan
-        self.handover_offset   = handover_offset # Distance before the end of the path to handover control of the WAMV-V
+        self.beta_hat = 0 # Integral term for computing the desired heading using ILOS guidance method
+        self.look_ahead = 30 # Lookahead distance in meters
+        self.min_wp_dist = 25 # Minimum distance between two waypoints so as to allow the WAM-V to get on track
+        self.max_deviation = 10 # Maximum permissible deviation from path before triggering a replan
+        self.handover_offset = handover_offset # Distance before the end of the path to handover control of the WAMV-V
 
     def measure_distance(self, wp1, wp2):
         '''
@@ -291,7 +291,7 @@ class PathPlanner:
 
         :return recovery_path: Re-planned path
         '''
-        target_idx = int(min(current_wp_idx + numpy.floor(self.look_ahead_dist/self.path_hdlr.step_size), len(original_path)-numpy.floor(self.min_wp_dist/self.path_hdlr.step_size)))
+        target_idx = int(min(current_wp_idx + numpy.floor(self.look_ahead/self.path_hdlr.step_size), len(original_path)-numpy.floor(self.min_wp_dist/self.path_hdlr.step_size)))
         start = asv_pose
         end = copy.deepcopy(original_path[target_idx])
         mission = Mission.Path(waypoints=[start, end])

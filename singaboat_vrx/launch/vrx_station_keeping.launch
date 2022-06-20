@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- SINGABOAT-VRX Pose Processor -->
+  <node pkg="singaboat_vrx" type="singaboat_pose_processor.py" name="singaboat_pose_processor"/>
+  
+  <!-- SINGABOAT-VRX Station-Keeping -->
+  <node pkg="singaboat_vrx" type="singaboat_station_keeping.py" name="singaboat_station_keeping" output="screen"/>
+
+  <!-- SINGABOAT-VRX IK Solver -->
+  <node pkg="singaboat_vrx" type="singaboat_ik_solver.py" name="singaboat_ik_solver"/>
+
+</launch>

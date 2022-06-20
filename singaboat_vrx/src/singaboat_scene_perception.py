@@ -19,12 +19,6 @@ from singaboat_vrx.perception_module import BuoyDetector, GateDetector
 if __name__ == '__main__':
     rospy.init_node('singaboat_scene_perception')
 
-    # Wait for valid messages to ensure proper state initialization
-    rospy.wait_for_message('/wamv/sensors/gps/gps/fix', NavSatFix)
-    rospy.wait_for_message('/wamv/sensors/imu/imu/data', Imu)
-    rospy.wait_for_message('/wamv/sensors/cameras/camera/image_raw', Image)
-    rospy.wait_for_message('/wamv/sensors/lidars/lidar/points', PointCloud2)
-
     task_msg = rospy.wait_for_message('/vrx/task/info', Task)
 
     if task_msg.name == 'perception':
@@ -32,18 +26,16 @@ if __name__ == '__main__':
         scene_perception_node = BuoyDetector()
         # Dynamic reconfigure server
         scene_perception_node.dyn_reconf_srv = Server(ScenePerceptionConfig, scene_perception_node.config_callback)
-        # Messages
-        scene_perception_node.cam_viz_msg = Image()
-        scene_perception_node.object_msg  = GeoPoseStamped()
+        # Message
+        scene_perception_node.object_msg = GeoPoseStamped()
         # Subscribers
         rospy.Subscriber('/vrx/task/info', Task, scene_perception_node.task_callback)
-        rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, scene_perception_node.gps_callback)
-        rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, scene_perception_node.imu_callback)
+        rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, scene_perception_node.gps_callback,queue_size=1)
+        rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, scene_perception_node.imu_callback, queue_size=1)
         rospy.Subscriber('/wamv/sensors/cameras/camera/image_raw', Image, scene_perception_node.camera_callback)
         rospy.Subscriber('/wamv/sensors/lidars/lidar/points', PointCloud2, scene_perception_node.lidar_callback)
-        # Publishers
-        scene_perception_node.cam_viz_pub = rospy.Publisher('/rviz/cam_viz', Image, queue_size=10)
-        scene_perception_node.object_pub  = rospy.Publisher('/vrx/perception/landmark', GeoPoseStamped, queue_size=10)
+        # Publisher
+        scene_perception_node.object_pub = rospy.Publisher('/vrx/perception/landmark', GeoPoseStamped, queue_size=10)
         # Recursive loop
         try:
             rospy.spin()
@@ -56,23 +48,24 @@ if __name__ == '__main__':
         # Dynamic reconfigure server
         gate_detector.buoy_detector.dyn_reconf_srv = Server(ScenePerceptionConfig, gate_detector.config_callback)
         # Messages
-        gate_detector.buoy_detector.cam_viz_msg  = Image()
-        gate_detector.buoy_detector.object_msg   = GeoPoseStamped()
+        gate_detector.buoy_detector.object_msg = GeoPoseStamped()
         gate_detector.buoy_detector.obstacle_msg = Float64MultiArray()
         # Subscribers
         rospy.Subscriber('/vrx/task/info', Task, gate_detector.buoy_detector.task_callback)
-        rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, gate_detector.buoy_detector.gps_callback)
-        rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, gate_detector.buoy_detector.imu_callback)
+        rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, gate_detector.buoy_detector.gps_callback,queue_size=1)
+        rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, gate_detector.buoy_detector.imu_callback, queue_size=1)
         rospy.Subscriber('/wamv/sensors/cameras/camera/image_raw', Image, gate_detector.buoy_detector.camera_callback)
         rospy.Subscriber('/wamv/sensors/lidars/lidar/points', PointCloud2, gate_detector.buoy_detector.lidar_callback)
-        rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, gate_detector.gps_callback)
-        rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, gate_detector.imu_callback)
+        rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, gate_detector.gps_callback,queue_size=1)
+        rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, gate_detector.imu_callback, queue_size=1)
         # Publishers
-        gate_detector.buoy_detector.cam_viz_pub  = rospy.Publisher('/rviz/cam_viz', Image, queue_size=10)
-        gate_detector.buoy_detector.object_pub   = rospy.Publisher('/wamv/detected_objects', GeoPoseStamped, queue_size=10)
+        gate_detector.buoy_detector.object_pub = rospy.Publisher('/wamv/detected_objects', GeoPoseStamped, queue_size=10)
         gate_detector.buoy_detector.obstacle_pub = rospy.Publisher('/wamv/detected_obstacles', Float64MultiArray, queue_size=10)
+        # Wait for valid messages to ensure proper state initialization
+        rospy.wait_for_message('/wamv/sensors/gps/gps/fix', NavSatFix)
+        rospy.wait_for_message('/wamv/sensors/imu/imu/data', Imu)
         # ROS rate
-        rate = rospy.Rate(20)
+        rate = rospy.Rate(5)
         # Recursive loop
         try:
             while not rospy.is_shutdown():
