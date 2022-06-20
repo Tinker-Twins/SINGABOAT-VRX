@@ -80,7 +80,7 @@ Demonstration videos are available on [YouTube](https://youtube.com/playlist?lis
 
 ## VRX COMPETITION 2022
 
-[Our team worked meticulously](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Team%20Working%20on%20Tasks.png) to complete all the [6 tasks of VRX Competition 2022](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Tasks.png) and ultimately emerged as one of the winners of the challange.
+[Our team worked meticulously](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Team%20Working%20on%20Tasks.png) to complete all the [6 tasks of VRX Competition 2022](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Tasks.png) and ultimately emerged as one of the winners of the challange, while also bagging several other special awards.
 
 | ![Station-Keeping](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%201%20-%20Station-Keeping.gif) | ![Wayfinding](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%202%20-%20Wayfinding.gif) | ![Scene Perception](https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/GIF/Task%203%20-%20Scene%20Perception.gif) |
 |:-----------------------------------------------:|:-------------------------------------------------:|:-----------------------------------------------:|
