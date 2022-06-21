@@ -1,5 +1,10 @@
 # SINGABOAT-VRX | Virtual RobotX (VRX) Competition
 
+![Github Stars](https://badgen.net/github/stars/Tinker-Twins/SINGABOAT-VRX?icon=github&label=stars)
+![Github Forks](https://badgen.net/github/forks/Tinker-Twins/SINGABOAT-VRX?icon=github&label=forks)
+[![Docker Stars](https://badgen.net/docker/stars/tinkertwins/singaboat-vrx?icon=docker&label=stars)](https://hub.docker.com/r/tinkertwins/singaboat-vrx/)
+[![Docker Pulls](https://badgen.net/docker/pulls/tinkertwins/singaboat-vrx?icon=docker&label=pulls)](https://hub.docker.com/r/tinkertwins/singaboat-vrx/)
+
 <img src="https://github.com/Tinker-Twins/SINGABOAT-VRX/blob/main/media/PNG/Team.png" width="1080">
 
 **COMPETITION:** Virtual RobotX (VRX) Competition 2022
