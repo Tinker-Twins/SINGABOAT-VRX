@@ -73,7 +73,7 @@ $ roslaunch singaboat_vrx singaboat_vrx.launch
 
 ## DOCKER
 
-The docker container image(s) containing all the source code as well as dependencies is available on [Docker Hub](https://hub.docker.com/repository/docker/tinkertwins/singaboat-vrx).
+The docker container image(s) containing all the source code as well as dependencies is available on [Docker Hub](https://hub.docker.com/r/tinkertwins/singaboat-vrx).
 
 ## VIDEOS
 
