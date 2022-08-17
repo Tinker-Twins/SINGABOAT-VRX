@@ -56,14 +56,14 @@
 
 1. Launch any VRX task simulation instance.
 ```bash
-$ roslaunch vrx_gazebo <TASK_NAME>.launch
+$ roslaunch vrx_gazebo <TASK_NAME>.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
 
-$ roslaunch vrx_gazebo station_keeping.launch
-$ roslaunch vrx_gazebo wayfinding.launch
-$ roslaunch vrx_gazebo perception_task.launch
-$ roslaunch vrx_gazebo wildlife.launch
-$ roslaunch vrx_gazebo gymkhana.launch
-$ roslaunch vrx_gazebo scan_dock_deliver.launch
+$ roslaunch vrx_gazebo station_keeping.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
+$ roslaunch vrx_gazebo wayfinding.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
+$ roslaunch vrx_gazebo perception_task.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
+$ roslaunch vrx_gazebo wildlife.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
+$ roslaunch vrx_gazebo gymkhana.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
+$ roslaunch vrx_gazebo scan_dock_deliver.launch urdf:=$(rospack find singaboat_vrx)/urdf/singaboat.urdf
 ```
 
 2. Launch `singaboat_task_manager` to automatically identify the VRX task and execute the corresponding SINGABOAT-VRX solution algorithm.
