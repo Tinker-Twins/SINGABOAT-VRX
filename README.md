@@ -2,7 +2,6 @@
 
 ![Github Stars](https://badgen.net/github/stars/Tinker-Twins/SINGABOAT-VRX?icon=github&label=stars)
 ![Github Forks](https://badgen.net/github/forks/Tinker-Twins/SINGABOAT-VRX?icon=github&label=forks)
-![Github Downloads](https://img.shields.io/github/downloads/Tinker-Twins/SINGABOAT-VRX/total?color=blue&label=downloads&logo=github&logoColor=white)
 [![Docker Stars](https://badgen.net/docker/stars/tinkertwins/singaboat-vrx?icon=docker&label=stars)](https://hub.docker.com/r/tinkertwins/singaboat-vrx/)
 [![Docker Pulls](https://badgen.net/docker/pulls/tinkertwins/singaboat-vrx?icon=docker&label=pulls)](https://hub.docker.com/r/tinkertwins/singaboat-vrx/)
 
